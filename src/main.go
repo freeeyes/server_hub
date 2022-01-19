@@ -8,7 +8,6 @@ import (
 	"io"
 	"os"
 	"os/signal"
-	"server_hub/events"
 	"server_hub/socket"
 	"syscall"
 	"time"
@@ -65,14 +64,6 @@ func Catch_sig(ch chan os.Signal, done chan bool) {
 
 func main() {
 	f_pipe_test()
-
-	var man events.Persion = new(events.Man)
-	man.Say()
-	man.Eat("bread")
-
-	var woman events.Persion = new(events.WoMan)
-	woman.Say()
-	woman.Eat("bread")
 
 	// 初始化通道
 	signals := make(chan os.Signal, 1)
