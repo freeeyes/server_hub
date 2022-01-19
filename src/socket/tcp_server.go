@@ -16,7 +16,7 @@ type Tcp_Serve struct {
 	server_port_      string
 	listen_           net.Listener
 	session_list_     map[int]*Tcp_Session
-	chan_work_        events.Chan_Work
+	chan_work_        *events.Chan_Work
 }
 
 func (tcp_server *Tcp_Serve) Handle_Connection(c net.Conn) {
@@ -77,13 +77,11 @@ func (tcp_server *Tcp_Serve) Handle_Connection(c net.Conn) {
 	}
 }
 
-func (tcp_server *Tcp_Serve) Listen(ip string, port string, queue_count int) uint16 {
+func (tcp_server *Tcp_Serve) Listen(ip string, port string, chan_work *events.Chan_Work) uint16 {
 	tcp_server.session_id_count_ = 1
 	tcp_server.server_ip_ = ip
 	tcp_server.server_port_ = port
-
-	//初始化收发队列
-	tcp_server.chan_work_.Start(queue_count)
+	tcp_server.chan_work_ = chan_work
 
 	//初始化map
 	tcp_server.session_list_ = make(map[int]*Tcp_Session)

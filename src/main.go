@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/signal"
 	"server_hub/common"
+	"server_hub/events"
 	"server_hub/socket"
 	"syscall"
 )
@@ -56,8 +57,11 @@ func main() {
 		return
 	}
 
-	fmt.Println("[read_server_json]tcp_ip=", server_json_info.Tcp_server_.Server_ip_)
-	fmt.Println("[read_server_json]tcp_port=", server_json_info.Tcp_server_.Server_port_)
+	for _, tcp_server_config := range server_json_info.Tcp_server_ {
+		fmt.Println("[read_server_json]tcp_ip=", tcp_server_config.Server_ip_)
+		fmt.Println("[read_server_json]tcp_port=", tcp_server_config.Server_port_)
+		fmt.Println("[read_server_json]===================")
+	}
 	fmt.Println("[read_server_json]recv_chan_count=", server_json_info.Recv_queue_count_)
 
 	// 初始化通道
@@ -69,12 +73,20 @@ func main() {
 
 	go Catch_sig(signals, done)
 
-	//启动tcp监听
-	var tcp_server = new(socket.Tcp_Serve)
+	//启动IO事件处理线程
+	chan_work_ := new(events.Chan_Work)
 
-	go tcp_server.Listen(server_json_info.Tcp_server_.Server_ip_,
-		server_json_info.Tcp_server_.Server_port_,
-		server_json_info.Recv_queue_count_)
+	//初始化收发队列
+	chan_work_.Start(server_json_info.Recv_queue_count_)
+
+	//启动tcp监听
+	for _, tcp_server_config := range server_json_info.Tcp_server_ {
+		var tcp_server = new(socket.Tcp_Serve)
+
+		go tcp_server.Listen(tcp_server_config.Server_ip_,
+			tcp_server_config.Server_port_,
+			chan_work_)
+	}
 
 	<-done
 	fmt.Println("Done!")

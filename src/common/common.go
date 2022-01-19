@@ -13,6 +13,6 @@ type Net_io struct {
 
 //Json文件配置
 type Server_json_info struct {
-	Tcp_server_       Net_io
+	Tcp_server_       []Net_io
 	Recv_queue_count_ int
 }
