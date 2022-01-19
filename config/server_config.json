@@ -1,0 +1,8 @@
+{
+    "Tcp_server_":[{
+        "Server_ip_":"127.0.0.1",
+        "Server_port_":"10020"
+     }],
+
+    "Recv_queue_count_":100
+  }
