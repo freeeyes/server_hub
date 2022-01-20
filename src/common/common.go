@@ -6,6 +6,11 @@ type Ip_info struct {
 	Port_ string
 }
 
+//session接口
+type Session_Info interface {
+	Send_Io(data []byte, data_len int)
+}
+
 type Net_io struct {
 	Server_ip_   string
 	Server_port_ string

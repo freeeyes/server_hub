@@ -36,6 +36,7 @@ func (tcp_server *Tcp_Serve) Handle_Connection(c net.Conn) {
 	message.Server_ip_info_.Port_ = session.server_port_
 	message.Client_ip_info_.Ip_ = session.client_ip_
 	message.Client_ip_info_.Port_ = session.client_port_
+	message.Session_info_ = session
 	tcp_server.chan_work_.Add_Message(message)
 
 	tcp_server.session_list_[session.Get_Session_ID()] = session
@@ -68,7 +69,7 @@ func (tcp_server *Tcp_Serve) Handle_Connection(c net.Conn) {
 		copy(read_buffer, session.Get_Recv_Buff()[0:reqLen])
 
 		var message = new(events.Io_Info)
-		message.Session_id_ = tcp_server.session_id_count_
+		message.Session_id_ = session.Get_Session_ID()
 		message.Message_type_ = events.Io_Event_Data
 		message.Mesaage_data_ = read_buffer
 		message.Message_Len_ = reqLen
