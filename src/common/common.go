@@ -20,4 +20,6 @@ type Net_io struct {
 type Server_json_info struct {
 	Tcp_server_       []Net_io
 	Recv_queue_count_ int
+	Recv_buff_size_   int
+	Send_buff_size_   int
 }

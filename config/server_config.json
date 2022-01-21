@@ -4,5 +4,7 @@
         "Server_port_":"10020"
      }],
 
-    "Recv_queue_count_":100
+    "Recv_queue_count_":100,
+    "Recv_buff_size_":1024,
+    "Send_buff_size_":1024
   }

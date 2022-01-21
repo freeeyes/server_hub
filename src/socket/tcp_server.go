@@ -17,6 +17,8 @@ type Tcp_Serve struct {
 	listen_           net.Listener
 	session_list_     map[int]*Tcp_Session
 	chan_work_        *events.Chan_Work
+	recv_buff_size_   int
+	send_buff_size_   int
 }
 
 func (tcp_server *Tcp_Serve) Handle_Connection(c net.Conn) {
@@ -26,7 +28,9 @@ func (tcp_server *Tcp_Serve) Handle_Connection(c net.Conn) {
 		strings.Split(c.RemoteAddr().String(), ":")[1],
 		tcp_server.server_ip_,
 		tcp_server.server_port_,
-		c)
+		c,
+		tcp_server.recv_buff_size_,
+		tcp_server.send_buff_size_)
 
 	//添加链接建立事件
 	var message = new(events.Io_Info)
@@ -63,6 +67,7 @@ func (tcp_server *Tcp_Serve) Handle_Connection(c net.Conn) {
 		}
 
 		//fmt.Println("[Handle_Connection]session id=", session.Get_Session_ID(), " is recv, datalen=", reqLen)
+		//在这里数据包拆包分析
 
 		//添加数据到达的消息
 		var read_buffer = make([]byte, reqLen)
@@ -78,11 +83,13 @@ func (tcp_server *Tcp_Serve) Handle_Connection(c net.Conn) {
 	}
 }
 
-func (tcp_server *Tcp_Serve) Listen(ip string, port string, chan_work *events.Chan_Work) uint16 {
+func (tcp_server *Tcp_Serve) Listen(ip string, port string, chan_work *events.Chan_Work, recv_buff_size int, send_buff_size int) uint16 {
 	tcp_server.session_id_count_ = 1
 	tcp_server.server_ip_ = ip
 	tcp_server.server_port_ = port
 	tcp_server.chan_work_ = chan_work
+	tcp_server.recv_buff_size_ = recv_buff_size
+	tcp_server.send_buff_size_ = send_buff_size
 
 	//初始化map
 	tcp_server.session_list_ = make(map[int]*Tcp_Session)
