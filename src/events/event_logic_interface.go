@@ -13,5 +13,5 @@ type Io_events interface {
 }
 
 type Io_buff_to_packet interface {
-	recv_buff_to_packet(data []byte, data_len int) [][]byte
+	Recv_buff_to_packet(data []byte, data_len int) ([][]byte, int, bool)
 }

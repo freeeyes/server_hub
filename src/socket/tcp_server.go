@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 	"server_hub/events"
+	"server_hub/server_logic"
 	"strings"
 )
 
@@ -19,9 +20,10 @@ type Tcp_Serve struct {
 	chan_work_        *events.Chan_Work
 	recv_buff_size_   int
 	send_buff_size_   int
+	packet_parse_     events.Io_buff_to_packet
 }
 
-func (tcp_server *Tcp_Serve) Handle_Connection(c net.Conn) {
+func (tcp_server *Tcp_Serve) Handle_Connection(c net.Conn, packet_parse events.Io_buff_to_packet) {
 	var session = new(Tcp_Session)
 	session.Init(tcp_server.session_id_count_,
 		strings.Split(c.RemoteAddr().String(), ":")[0],
@@ -60,26 +62,33 @@ func (tcp_server *Tcp_Serve) Handle_Connection(c net.Conn) {
 	}()
 
 	for {
-		reqLen, err := c.Read(session.Get_Recv_Buff())
+		reqLen, err := c.Read(session.Get_recv_buff())
 		if err != nil || reqLen == 0 {
 			fmt.Println(err)
 			return
 		}
 
-		//fmt.Println("[Handle_Connection]session id=", session.Get_Session_ID(), " is recv, datalen=", reqLen)
+		fmt.Println("[Handle_Connection]session id=", session.Get_Session_ID(), " is recv, datalen=", reqLen)
+		session.Set_write_len(reqLen)
+
 		//在这里数据包拆包分析
+		packet_list, read_len, parse_is_ok := packet_parse.Recv_buff_to_packet(session.Get_read_buff(), session.Get_write_buff())
+		//fmt.Println("[Handle_Connection]packet_list=", len(packet_list))
+		//fmt.Println("[Handle_Connection]read_len=", read_len)
+		fmt.Println("[Handle_Connection]parse_is_ok=", parse_is_ok)
 
-		//添加数据到达的消息
-		var read_buffer = make([]byte, reqLen)
-		copy(read_buffer, session.Get_Recv_Buff()[0:reqLen])
+		for _, packet := range packet_list {
+			var message = new(events.Io_Info)
+			message.Session_id_ = session.Get_Session_ID()
+			message.Message_type_ = events.Io_Event_Data
+			message.Mesaage_data_ = packet
+			message.Message_Len_ = len(packet)
+			message.Session_info_ = session
+			tcp_server.chan_work_.Add_Message(message)
+		}
 
-		var message = new(events.Io_Info)
-		message.Session_id_ = session.Get_Session_ID()
-		message.Message_type_ = events.Io_Event_Data
-		message.Mesaage_data_ = read_buffer
-		message.Message_Len_ = reqLen
-		message.Session_info_ = session
-		tcp_server.chan_work_.Add_Message(message)
+		session.Reset_read_buff(read_len)
+		fmt.Println("[Handle_Connection]writelen=", session.Get_write_buff())
 	}
 }
 
@@ -90,6 +99,9 @@ func (tcp_server *Tcp_Serve) Listen(ip string, port string, chan_work *events.Ch
 	tcp_server.chan_work_ = chan_work
 	tcp_server.recv_buff_size_ = recv_buff_size
 	tcp_server.send_buff_size_ = send_buff_size
+
+	//初始化解析接口
+	tcp_server.packet_parse_ = new(server_logic.Io_buff_to_packet_logoc)
 
 	//初始化map
 	tcp_server.session_list_ = make(map[int]*Tcp_Session)
@@ -116,7 +128,7 @@ func (tcp_server *Tcp_Serve) Listen(ip string, port string, chan_work *events.Ch
 		}
 
 		//处理数据
-		go tcp_server.Handle_Connection(c)
+		go tcp_server.Handle_Connection(c, tcp_server.packet_parse_)
 	}
 
 	return 0
