@@ -56,6 +56,13 @@ func Show_config(server_json_info common.Server_json_info) {
 		fmt.Println("[read_server_json]tcp_port=", tcp_server_config.Server_port_)
 		fmt.Println("[read_server_json]===================")
 	}
+
+	for _, tcp_server_config := range server_json_info.Udp_Server_ {
+		fmt.Println("[read_server_json]udp_ip=", tcp_server_config.Server_ip_)
+		fmt.Println("[read_server_json]udp_port=", tcp_server_config.Server_port_)
+		fmt.Println("[read_server_json]===================")
+	}
+
 	fmt.Println("[read_server_json]Recv_buff_size_=", server_json_info.Recv_buff_size_)
 	fmt.Println("[read_server_json]Send_buff_size_=", server_json_info.Send_buff_size_)
 }
@@ -90,6 +97,17 @@ func main() {
 		var tcp_server = new(socket.Tcp_Serve)
 
 		go tcp_server.Listen(tcp_server_config.Server_ip_,
+			tcp_server_config.Server_port_,
+			chan_work_,
+			server_json_info.Recv_buff_size_,
+			server_json_info.Send_buff_size_)
+	}
+
+	//启动udp监听
+	for _, tcp_server_config := range server_json_info.Udp_Server_ {
+		var udp_server = new(socket.Udp_Serve)
+
+		go udp_server.Listen(tcp_server_config.Server_ip_,
 			tcp_server_config.Server_port_,
 			chan_work_,
 			server_json_info.Recv_buff_size_,

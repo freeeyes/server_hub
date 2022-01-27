@@ -2,7 +2,12 @@
     "Tcp_server_":[{
         "Server_ip_":"127.0.0.1",
         "Server_port_":"10020"
-     }],
+    }],
+
+     "Udp_Server_":[{
+      "Server_ip_":"127.0.0.1",
+      "Server_port_":"10030"
+    }],
 
     "Recv_queue_count_":100,
     "Recv_buff_size_":1024,

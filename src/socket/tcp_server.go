@@ -68,14 +68,14 @@ func (tcp_server *Tcp_Serve) Handle_Connection(c net.Conn, packet_parse events.I
 			return
 		}
 
-		fmt.Println("[Handle_Connection]session id=", session.Get_Session_ID(), " is recv, datalen=", reqLen)
+		fmt.Println("[Tcp_Serve::Handle_Connection]session id=", session.Get_Session_ID(), " is recv, datalen=", reqLen)
 		session.Set_write_len(reqLen)
 
 		//在这里数据包拆包分析
 		packet_list, read_len, parse_is_ok := packet_parse.Recv_buff_to_packet(session.Get_read_buff(), session.Get_write_buff())
 		//fmt.Println("[Handle_Connection]packet_list=", len(packet_list))
 		//fmt.Println("[Handle_Connection]read_len=", read_len)
-		fmt.Println("[Handle_Connection]parse_is_ok=", parse_is_ok)
+		fmt.Println("[Tcp_Serve::Handle_Connection]parse_is_ok=", parse_is_ok)
 
 		for _, packet := range packet_list {
 			var message = new(events.Io_Info)
@@ -88,7 +88,7 @@ func (tcp_server *Tcp_Serve) Handle_Connection(c net.Conn, packet_parse events.I
 		}
 
 		session.Reset_read_buff(read_len)
-		fmt.Println("[Handle_Connection]writelen=", session.Get_write_buff())
+		fmt.Println("[Tcp_Serve::Handle_Connection]writelen=", session.Get_write_buff())
 	}
 }
 
@@ -110,7 +110,7 @@ func (tcp_server *Tcp_Serve) Listen(ip string, port string, chan_work *events.Ch
 	server_info := tcp_server.server_ip_ + ":" + tcp_server.server_port_
 	l, err := net.Listen("tcp4", server_info)
 	if err != nil {
-		fmt.Println("[listen]err=", err)
+		fmt.Println("[Tcp_Serve::listen]err=", err)
 		return 1
 	}
 
@@ -119,11 +119,11 @@ func (tcp_server *Tcp_Serve) Listen(ip string, port string, chan_work *events.Ch
 	defer tcp_server.listen_.Close()
 
 	tcp_server.Show()
-	fmt.Println("[listen]success")
+	fmt.Println("[Tcp_Serve::listen]success")
 	for {
 		c, err := tcp_server.listen_.Accept()
 		if err != nil {
-			fmt.Println("[accept]err=", err)
+			fmt.Println("[Tcp_Serve::accept]err=", err)
 			break
 		}
 
@@ -135,11 +135,11 @@ func (tcp_server *Tcp_Serve) Listen(ip string, port string, chan_work *events.Ch
 }
 
 func (tcp_server *Tcp_Serve) Show() {
-	fmt.Println("[show]server ip=", tcp_server.server_ip_)
-	fmt.Println("[show]server port=", tcp_server.server_port_)
+	fmt.Println("[Tcp_Serve::show]server ip=", tcp_server.server_ip_)
+	fmt.Println("[Tcp_Serve::show]server port=", tcp_server.server_port_)
 }
 
 func (tcp_server *Tcp_Serve) Close() {
-	fmt.Println("[Close]server ip=", tcp_server.server_ip_)
+	fmt.Println("[Tcp_Serve::Close]server ip=", tcp_server.server_ip_)
 	tcp_server.listen_.Close()
 }
