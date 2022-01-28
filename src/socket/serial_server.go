@@ -16,7 +16,7 @@ type Serial_Server struct {
 	Session_          Serial_Session
 }
 
-func (serial_Server *Serial_Server) Listen(name string, frequency int, chan_work *events.Chan_Work, recv_buff_size int, send_buff_size int, packet_parse events.Io_buff_to_packet) uint16 {
+func (serial_Server *Serial_Server) Listen(session_id int, name string, frequency int, chan_work *events.Chan_Work, recv_buff_size int, send_buff_size int, packet_parse events.Io_buff_to_packet) uint16 {
 	serial_Server.serial_name_ = name
 	serial_Server.serial_frequency_ = frequency
 	serial_Server.chan_work_ = chan_work
@@ -32,7 +32,7 @@ func (serial_Server *Serial_Server) Listen(name string, frequency int, chan_work
 
 	serial_Server.packet_parse_ = packet_parse
 
-	serial_Server.Session_.Init(1,
+	serial_Server.Session_.Init(session_id,
 		serial_Server.serial_name_,
 		serial_Server.serial_frequency_,
 		serial_Server.recv_buff_size_,

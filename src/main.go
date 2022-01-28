@@ -120,6 +120,19 @@ func main() {
 			packet_parse)
 	}
 
+	//启动serial监听
+	for _, serial_server_config := range server_json_info.Serial_Server_ {
+		var serial_Server = new(socket.Serial_Server)
+
+		go serial_Server.Listen(serial_server_config.Serial_session_id_
+			serial_server_config.Serial_name_,
+			tcp_server_config.Serial_frequency_,
+			chan_work_,
+			server_json_info.Recv_buff_size_,
+			server_json_info.Send_buff_size_,
+			packet_parse)
+	}
+
 	<-done
 	fmt.Println("Done!")
 }
