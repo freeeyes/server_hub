@@ -11,6 +11,7 @@ import (
 	"os/signal"
 	"server_hub/common"
 	"server_hub/events"
+	"server_hub/server_logic"
 	"server_hub/socket"
 	"syscall"
 )
@@ -92,15 +93,19 @@ func main() {
 	//初始化收发队列
 	chan_work_.Start(server_json_info.Recv_queue_count_)
 
+	//创建消息解析类
+	var packet_parse events.Io_buff_to_packet = new(server_logic.Io_buff_to_packet_logoc)
+
 	//启动tcp监听
 	for _, tcp_server_config := range server_json_info.Tcp_server_ {
-		var tcp_server = new(socket.Tcp_Serve)
+		var tcp_server = new(socket.Tcp_server)
 
 		go tcp_server.Listen(tcp_server_config.Server_ip_,
 			tcp_server_config.Server_port_,
 			chan_work_,
 			server_json_info.Recv_buff_size_,
-			server_json_info.Send_buff_size_)
+			server_json_info.Send_buff_size_,
+			packet_parse)
 	}
 
 	//启动udp监听
@@ -111,7 +116,8 @@ func main() {
 			tcp_server_config.Server_port_,
 			chan_work_,
 			server_json_info.Recv_buff_size_,
-			server_json_info.Send_buff_size_)
+			server_json_info.Send_buff_size_,
+			packet_parse)
 	}
 
 	<-done

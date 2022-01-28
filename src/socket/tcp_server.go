@@ -4,14 +4,13 @@ import (
 	"fmt"
 	"net"
 	"server_hub/events"
-	"server_hub/server_logic"
 	"strings"
 )
 
 //实现tcp server监听的功能
 //add by freeeyes
 
-type Tcp_Serve struct {
+type Tcp_server struct {
 	session_id_count_ int
 	server_ip_        string
 	server_port_      string
@@ -23,7 +22,7 @@ type Tcp_Serve struct {
 	packet_parse_     events.Io_buff_to_packet
 }
 
-func (tcp_server *Tcp_Serve) Handle_Connection(c net.Conn, packet_parse events.Io_buff_to_packet) {
+func (tcp_server *Tcp_server) Handle_Connection(c net.Conn, packet_parse events.Io_buff_to_packet) {
 	var session = new(Tcp_Session)
 	session.Init(tcp_server.session_id_count_,
 		strings.Split(c.RemoteAddr().String(), ":")[0],
@@ -75,7 +74,10 @@ func (tcp_server *Tcp_Serve) Handle_Connection(c net.Conn, packet_parse events.I
 		packet_list, read_len, parse_is_ok := packet_parse.Recv_buff_to_packet(session.Get_read_buff(), session.Get_write_buff())
 		//fmt.Println("[Handle_Connection]packet_list=", len(packet_list))
 		//fmt.Println("[Handle_Connection]read_len=", read_len)
-		fmt.Println("[Tcp_Serve::Handle_Connection]parse_is_ok=", parse_is_ok)
+		if !parse_is_ok {
+			fmt.Println("[Tcp_Serve::Handle_Connection]parse_is_ok=", parse_is_ok)
+			break
+		}
 
 		for _, packet := range packet_list {
 			var message = new(events.Io_Info)
@@ -92,7 +94,7 @@ func (tcp_server *Tcp_Serve) Handle_Connection(c net.Conn, packet_parse events.I
 	}
 }
 
-func (tcp_server *Tcp_Serve) Listen(ip string, port string, chan_work *events.Chan_Work, recv_buff_size int, send_buff_size int) uint16 {
+func (tcp_server *Tcp_server) Listen(ip string, port string, chan_work *events.Chan_Work, recv_buff_size int, send_buff_size int, packet_parse events.Io_buff_to_packet) uint16 {
 	tcp_server.session_id_count_ = 1
 	tcp_server.server_ip_ = ip
 	tcp_server.server_port_ = port
@@ -101,7 +103,7 @@ func (tcp_server *Tcp_Serve) Listen(ip string, port string, chan_work *events.Ch
 	tcp_server.send_buff_size_ = send_buff_size
 
 	//初始化解析接口
-	tcp_server.packet_parse_ = new(server_logic.Io_buff_to_packet_logoc)
+	tcp_server.packet_parse_ = packet_parse
 
 	//初始化map
 	tcp_server.session_list_ = make(map[int]*Tcp_Session)
@@ -134,12 +136,12 @@ func (tcp_server *Tcp_Serve) Listen(ip string, port string, chan_work *events.Ch
 	return 0
 }
 
-func (tcp_server *Tcp_Serve) Show() {
+func (tcp_server *Tcp_server) Show() {
 	fmt.Println("[Tcp_Serve::show]server ip=", tcp_server.server_ip_)
 	fmt.Println("[Tcp_Serve::show]server port=", tcp_server.server_port_)
 }
 
-func (tcp_server *Tcp_Serve) Close() {
+func (tcp_server *Tcp_server) Close() {
 	fmt.Println("[Tcp_Serve::Close]server ip=", tcp_server.server_ip_)
 	tcp_server.listen_.Close()
 }

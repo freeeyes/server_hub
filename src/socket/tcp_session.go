@@ -15,7 +15,7 @@ type Tcp_Session struct {
 	send_buff_      []byte
 	recv_buff_size_ int
 	send_buff_size_ int
-	write_len       int
+	write_len_      int
 	session_io_     net.Conn
 }
 
@@ -30,28 +30,28 @@ func (tcp_session *Tcp_Session) Init(session_id int, client_ip string, client_po
 	tcp_session.recv_buff_ = make([]byte, tcp_session.recv_buff_size_)
 	tcp_session.send_buff_ = make([]byte, tcp_session.send_buff_size_)
 	tcp_session.session_io_ = session_io
-	tcp_session.write_len = 0
+	tcp_session.write_len_ = 0
 }
 
 func (tcp_session *Tcp_Session) Get_write_buff() int {
-	return tcp_session.write_len
+	return tcp_session.write_len_
 }
 
 func (tcp_session *Tcp_Session) Set_write_len(read_len int) {
-	tcp_session.write_len += read_len
+	tcp_session.write_len_ += read_len
 }
 
 func (tcp_session *Tcp_Session) Reset_read_buff(read_len int) {
-	if read_len == tcp_session.write_len {
+	if read_len == tcp_session.write_len_ {
 		//全部读完了
-		tcp_session.write_len = 0
+		tcp_session.write_len_ = 0
 	} else {
-		tcp_session.write_len -= read_len
+		tcp_session.write_len_ -= read_len
 	}
 }
 
 func (tcp_session *Tcp_Session) Get_recv_buff() []byte {
-	return tcp_session.recv_buff_[tcp_session.write_len:(tcp_session.recv_buff_size_ - tcp_session.write_len)]
+	return tcp_session.recv_buff_[tcp_session.write_len_:(tcp_session.recv_buff_size_ - tcp_session.write_len_)]
 }
 
 func (tcp_session *Tcp_Session) Get_read_buff() []byte {

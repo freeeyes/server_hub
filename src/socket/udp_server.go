@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net"
 	"server_hub/events"
-	"server_hub/server_logic"
 	"strconv"
 )
 
@@ -70,6 +69,12 @@ func (udp_server *Udp_Serve) Recv_udp_data() uint16 {
 
 		if read_len != recv_len || !parse_is_ok {
 			fmt.Println("[Udp_Serve::listen]packet parse data fail!")
+
+			//发送链接断开事件
+			var message = new(events.Io_Info)
+			message.Session_id_ = session.Get_Session_ID()
+			message.Message_type_ = events.Io_Event_DisConnect
+			udp_server.chan_work_.Add_Message(message)
 		} else {
 			for _, packet := range packet_list {
 				var message = new(events.Io_Info)
@@ -86,7 +91,7 @@ func (udp_server *Udp_Serve) Recv_udp_data() uint16 {
 	return 0
 }
 
-func (udp_server *Udp_Serve) Listen(ip string, port string, chan_work *events.Chan_Work, recv_buff_size int, send_buff_size int) uint16 {
+func (udp_server *Udp_Serve) Listen(ip string, port string, chan_work *events.Chan_Work, recv_buff_size int, send_buff_size int, packet_parse events.Io_buff_to_packet) uint16 {
 	udp_server.session_id_count_ = 1
 	udp_server.server_ip_ = ip
 	udp_server.server_port_ = port
@@ -95,7 +100,7 @@ func (udp_server *Udp_Serve) Listen(ip string, port string, chan_work *events.Ch
 	udp_server.send_buff_size_ = send_buff_size
 
 	//初始化解析接口
-	udp_server.packet_parse_ = new(server_logic.Io_buff_to_packet_logoc)
+	udp_server.packet_parse_ = packet_parse
 
 	//初始化map
 	udp_server.session_list_ = make(map[string]*Udp_Session)
