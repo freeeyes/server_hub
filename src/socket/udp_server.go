@@ -115,11 +115,17 @@ func (udp_server *Udp_Serve) Listen(ip string, port string, chan_work *events.Ch
 
 	udp_server.listen_ = l
 
-	defer udp_server.listen_.Close()
+	//defer udp_server.listen_.Close()
 
 	udp_server.Show()
 	fmt.Println("[Udp_Serve::listen]success")
 
 	//开始接收数据
 	return udp_server.Recv_udp_data()
+}
+
+func (udp_server *Udp_Serve) Close() {
+	fmt.Println("[Udp_Serve::Close]server ip=", udp_server.server_ip_)
+	fmt.Println("[Udp_Serve::Close]server port=", udp_server.server_ip_)
+	udp_server.listen_.Close()
 }

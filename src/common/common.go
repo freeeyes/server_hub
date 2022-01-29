@@ -9,6 +9,7 @@ type Ip_info struct {
 //session接口
 type Session_Info interface {
 	Send_Io(data []byte, data_len int)
+	Close_Io()
 }
 
 type Net_io struct {

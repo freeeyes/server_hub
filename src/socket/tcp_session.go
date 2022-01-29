@@ -62,6 +62,10 @@ func (tcp_session *Tcp_Session) Send_Io(data []byte, data_len int) {
 	tcp_session.session_io_.Write(data[:data_len])
 }
 
+func (tcp_session *Tcp_Session) Close_Io() {
+	tcp_session.session_io_.Close()
+}
+
 func (tcp_session *Tcp_Session) Get_Recv_Buff() []byte {
 	return tcp_session.recv_buff_
 }

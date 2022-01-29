@@ -61,6 +61,10 @@ func (serial_Session *Serial_Session) Send_Io(data []byte, data_len int) {
 	}
 }
 
+func (serial_Session *Serial_Session) Close_Io() {
+	serial_Session.serial_port_.Close()
+}
+
 func (serial_Session *Serial_Session) Get_Recv_Buff() []byte {
 	return serial_Session.recv_buff_
 }

@@ -118,7 +118,7 @@ func (tcp_server *Tcp_server) Listen(ip string, port string, chan_work *events.C
 
 	tcp_server.listen_ = l
 
-	defer tcp_server.listen_.Close()
+	//defer tcp_server.listen_.Close()
 
 	tcp_server.Show()
 	fmt.Println("[Tcp_Serve::listen]success")
@@ -143,5 +143,6 @@ func (tcp_server *Tcp_server) Show() {
 
 func (tcp_server *Tcp_server) Close() {
 	fmt.Println("[Tcp_Serve::Close]server ip=", tcp_server.server_ip_)
+	fmt.Println("[Tcp_Serve::Close]server port=", tcp_server.server_port_)
 	tcp_server.listen_.Close()
 }

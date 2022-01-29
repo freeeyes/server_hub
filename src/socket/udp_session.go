@@ -29,6 +29,10 @@ func (udp_session *Udp_Session) Init(session_id int, client_ip string, client_po
 	udp_session.send_buff_ = make([]byte, udp_session.send_buff_size_)
 }
 
+func (udp_session *Udp_Session) Close_Io() {
+	//udp无法关闭
+}
+
 func (udp_session *Udp_Session) Send_Io(data []byte, data_len int) {
 	if data_len > 0 {
 		udp_session.socket_.WriteToUDP(data, &net.UDPAddr{IP: net.ParseIP(udp_session.client_ip_), Port: udp_session.client_port_})

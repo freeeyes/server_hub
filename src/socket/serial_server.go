@@ -38,7 +38,7 @@ func (serial_Server *Serial_Server) Listen(session_id int, name string, frequenc
 		serial_Server.recv_buff_size_,
 		serial_Server.send_buff_size_,
 		s)
-	defer serial_Server.Session_.serial_port_.Close()
+	//defer serial_Server.Session_.serial_port_.Close()
 
 	for {
 		recv_len, err := serial_Server.Session_.serial_port_.Read(serial_Server.Session_.Get_recv_buff())
@@ -77,4 +77,12 @@ func (serial_Server *Serial_Server) Listen(session_id int, name string, frequenc
 	serial_Server.chan_work_.Add_Message(message)
 
 	return 0
+}
+
+func (serial_Server *Serial_Server) Close() {
+	//停止监听
+	fmt.Println("[Serial_Server::Close]server ip=", serial_Server.serial_name_)
+	fmt.Println("[Serial_Server::Close]server frequency=", serial_Server.serial_frequency_)
+
+	serial_Server.Session_.serial_port_.Close()
 }

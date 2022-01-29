@@ -16,6 +16,18 @@ import (
 	"syscall"
 )
 
+type Listen_group struct {
+	tcp_listen_list_    map[int]*socket.Tcp_server
+	udp_listen_list_    map[int]*socket.Udp_Serve
+	serial_listen_list_ map[int]*socket.Serial_Server
+}
+
+func (listen_group *Listen_group) Init() {
+	listen_group.tcp_listen_list_ = make(map[int]*socket.Tcp_server)
+	listen_group.udp_listen_list_ = make(map[int]*socket.Udp_Serve)
+	listen_group.serial_listen_list_ = make(map[int]*socket.Serial_Server)
+}
+
 //监控信号量
 func Catch_sig(ch chan os.Signal, done chan bool) {
 	sig := <-ch
@@ -51,6 +63,21 @@ func Read_server_json(config_file_path string, server_json_info interface{}) boo
 	return true
 }
 
+func Close(listen_group *Listen_group) {
+	//关闭服务器，释放资源
+	for _, tcp_server := range listen_group.tcp_listen_list_ {
+		tcp_server.Close()
+	}
+
+	for _, udp_server := range listen_group.udp_listen_list_ {
+		udp_server.Close()
+	}
+
+	for _, serial_server := range listen_group.serial_listen_list_ {
+		serial_server.Close()
+	}
+}
+
 func Show_config(server_json_info common.Server_json_info) {
 	for _, tcp_server_config := range server_json_info.Tcp_server_ {
 		fmt.Println("[read_server_json]tcp_ip=", tcp_server_config.Server_ip_)
@@ -75,6 +102,10 @@ func main() {
 		return
 	}
 
+	//创建对应的队列
+	var listen_group = new(Listen_group)
+	listen_group.Init()
+
 	//显示配置文件内容
 	Show_config(server_json_info)
 
@@ -97,8 +128,12 @@ func main() {
 	var packet_parse events.Io_buff_to_packet = new(server_logic.Io_buff_to_packet_logoc)
 
 	//启动tcp监听
+	listen_id := 0
 	for _, tcp_server_config := range server_json_info.Tcp_server_ {
 		var tcp_server = new(socket.Tcp_server)
+
+		listen_group.tcp_listen_list_[listen_id] = tcp_server
+		listen_id++
 
 		go tcp_server.Listen(tcp_server_config.Server_ip_,
 			tcp_server_config.Server_port_,
@@ -106,11 +141,15 @@ func main() {
 			server_json_info.Recv_buff_size_,
 			server_json_info.Send_buff_size_,
 			packet_parse)
+
 	}
 
 	//启动udp监听
 	for _, tcp_server_config := range server_json_info.Udp_Server_ {
 		var udp_server = new(socket.Udp_Serve)
+
+		listen_group.udp_listen_list_[listen_id] = udp_server
+		listen_id++
 
 		go udp_server.Listen(tcp_server_config.Server_ip_,
 			tcp_server_config.Server_port_,
@@ -124,14 +163,19 @@ func main() {
 	for _, serial_server_config := range server_json_info.Serial_Server_ {
 		var serial_Server = new(socket.Serial_Server)
 
-		go serial_Server.Listen(serial_server_config.Serial_session_id_
+		listen_group.serial_listen_list_[listen_id] = serial_Server
+		listen_id++
+
+		go serial_Server.Listen(serial_server_config.Serial_session_id_,
 			serial_server_config.Serial_name_,
-			tcp_server_config.Serial_frequency_,
+			serial_server_config.Serial_frequency_,
 			chan_work_,
 			server_json_info.Recv_buff_size_,
 			server_json_info.Send_buff_size_,
 			packet_parse)
 	}
+
+	defer Close(listen_group)
 
 	<-done
 	fmt.Println("Done!")
