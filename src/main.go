@@ -175,6 +175,10 @@ func main() {
 			packet_parse)
 	}
 
+	//测试关闭监听流程
+	//time.Sleep(1 * time.Second)
+	//listen_group.tcp_listen_list_[0].Close()
+
 	defer Close(listen_group)
 
 	<-done

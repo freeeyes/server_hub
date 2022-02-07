@@ -7,13 +7,43 @@ import (
 )
 
 type Serial_Server struct {
-	serial_name_      string
-	serial_frequency_ int
-	chan_work_        *events.Chan_Work
-	recv_buff_size_   int
-	send_buff_size_   int
-	packet_parse_     events.Io_buff_to_packet
-	Session_          Serial_Session
+	serial_name_       string
+	serial_frequency_  int
+	chan_work_         *events.Chan_Work
+	recv_buff_size_    int
+	send_buff_size_    int
+	packet_parse_      events.Io_buff_to_packet
+	Session_           Serial_Session
+	listen_close_chan_ chan int
+}
+
+func (serial_Server *Serial_Server) Send_finish_listen_message() {
+	//发送消息，所有链接关闭结束。现在可以关闭监听了
+	fmt.Println("[Serial_Server::Send_finish_listen_message]send message listen close")
+	serial_Server.listen_close_chan_ <- 1
+}
+
+func (serial_Server *Serial_Server) Finial_Finish() {
+	//监听关闭，回收相关资源
+
+	//当全部客户端关闭执行完成后，执行消息通知，告知系统关闭
+	serial_Server.listen_close_chan_ = make(chan int, 1)
+
+	//发送监听结束消息
+	var message = new(events.Io_Info)
+	message.Session_id_ = 0
+	message.Message_type_ = events.Io_Listen_Close
+	message.Io_LIsten_Close_ = serial_Server
+	serial_Server.chan_work_.Add_Message(message)
+
+	for {
+		data := <-serial_Server.listen_close_chan_
+		if data == 1 {
+			break
+		}
+	}
+
+	fmt.Println("[Serial_Server::Finial_Finish]close ok")
 }
 
 func (serial_Server *Serial_Server) Listen(session_id int, name string, frequency int, chan_work *events.Chan_Work, recv_buff_size int, send_buff_size int, packet_parse events.Io_buff_to_packet) uint16 {

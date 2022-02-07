@@ -32,3 +32,8 @@ type Server_json_info struct {
 	Recv_buff_size_   int
 	Send_buff_size_   int
 }
+
+//关闭监听相关函数接口
+type Io_LIsten_Close interface {
+	Send_finish_listen_message()
+}

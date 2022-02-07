@@ -14,17 +14,19 @@ const (
 	Io_Event_DisConnect
 	Io_Event_Data
 	Io_Exit
+	Io_Listen_Close
 )
 
 //数据消息包
 type Io_Info struct {
-	Session_id_     int
-	Server_ip_info_ common.Ip_info
-	Client_ip_info_ common.Ip_info
-	Message_type_   int
-	Mesaage_data_   []byte
-	Message_Len_    int
-	Session_info_   common.Session_Info
+	Session_id_      int
+	Server_ip_info_  common.Ip_info
+	Client_ip_info_  common.Ip_info
+	Message_type_    int
+	Mesaage_data_    []byte
+	Message_Len_     int
+	Session_info_    common.Session_Info
+	Io_LIsten_Close_ common.Io_LIsten_Close
 }
 
 type Chan_Work struct {
@@ -63,6 +65,9 @@ func (chan_work *Chan_Work) Start(chan_count int) {
 				chan_work.events_logic_.Disconnect(data.Session_id_)
 			case Io_Event_Data:
 				chan_work.events_logic_.Recv_data(data.Session_id_, data.Mesaage_data_, data.Message_Len_, data.Session_info_)
+			case Io_Listen_Close:
+				//关闭监听
+				data.Io_LIsten_Close_.Send_finish_listen_message()
 			case Io_Exit:
 				fmt.Println("[do_chan_work]summer is close(", time.Now().String(), ") do")
 				return

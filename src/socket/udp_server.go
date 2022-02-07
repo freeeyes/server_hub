@@ -8,15 +8,54 @@ import (
 )
 
 type Udp_Serve struct {
-	session_id_count_ int
-	server_ip_        string
-	server_port_      string
-	listen_           *net.UDPConn
-	session_list_     map[string]*Udp_Session
-	chan_work_        *events.Chan_Work
-	recv_buff_size_   int
-	send_buff_size_   int
-	packet_parse_     events.Io_buff_to_packet
+	session_id_count_  int
+	server_ip_         string
+	server_port_       string
+	listen_            *net.UDPConn
+	session_list_      map[string]*Udp_Session
+	chan_work_         *events.Chan_Work
+	recv_buff_size_    int
+	send_buff_size_    int
+	packet_parse_      events.Io_buff_to_packet
+	listen_close_chan_ chan int
+}
+
+func (udp_server *Udp_Serve) Send_finish_listen_message() {
+	//发送消息，所有链接关闭结束。现在可以关闭监听了
+	fmt.Println("[Udp_Serve::Send_finish_listen_message]send message listen close")
+	udp_server.listen_close_chan_ <- 1
+}
+
+func (udp_server *Udp_Serve) Finial_Finish() {
+	//监听关闭，回收相关资源
+
+	//遍历map,并关闭链接客户端对象
+	for k, v := range udp_server.session_list_ {
+		fmt.Println("[Udp_Serve::Finial_Finish]close session id=", k)
+		var message = new(events.Io_Info)
+		message.Session_id_ = v.Get_Session_ID()
+		message.Message_type_ = events.Io_Event_DisConnect
+		udp_server.chan_work_.Add_Message(message)
+	}
+
+	//当全部客户端关闭执行完成后，执行消息通知，告知系统关闭
+	udp_server.listen_close_chan_ = make(chan int, 1)
+
+	//发送监听结束消息
+	var message = new(events.Io_Info)
+	message.Session_id_ = 0
+	message.Message_type_ = events.Io_Listen_Close
+	message.Io_LIsten_Close_ = udp_server
+	udp_server.chan_work_.Add_Message(message)
+
+	for {
+		data := <-udp_server.listen_close_chan_
+		if data == 1 {
+			break
+		}
+	}
+
+	fmt.Println("[Udp_Serve::Finial_Finish]close ok")
 }
 
 func (udp_server *Udp_Serve) Show() {
@@ -115,7 +154,7 @@ func (udp_server *Udp_Serve) Listen(ip string, port string, chan_work *events.Ch
 
 	udp_server.listen_ = l
 
-	//defer udp_server.listen_.Close()
+	defer udp_server.Finial_Finish()
 
 	udp_server.Show()
 	fmt.Println("[Udp_Serve::listen]success")
