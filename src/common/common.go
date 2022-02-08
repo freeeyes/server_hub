@@ -31,9 +31,10 @@ type Server_json_info struct {
 	Recv_queue_count_ int
 	Recv_buff_size_   int
 	Send_buff_size_   int
+	Io_time_check_    int
 }
 
 //关闭监听相关函数接口
-type Io_LIsten_Close interface {
+type Io_Listen interface {
 	Send_finish_listen_message()
 }

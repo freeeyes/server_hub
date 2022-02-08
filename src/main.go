@@ -14,6 +14,7 @@ import (
 	"server_hub/server_logic"
 	"server_hub/socket"
 	"syscall"
+	"time"
 )
 
 type Listen_group struct {
@@ -122,7 +123,7 @@ func main() {
 	chan_work_ := new(events.Chan_Work)
 
 	//初始化收发队列
-	chan_work_.Start(server_json_info.Recv_queue_count_)
+	chan_work_.Start(server_json_info.Recv_queue_count_, server_json_info.Io_time_check_)
 
 	//创建消息解析类
 	var packet_parse events.Io_buff_to_packet = new(server_logic.Io_buff_to_packet_logoc)
@@ -174,6 +175,18 @@ func main() {
 			server_json_info.Send_buff_size_,
 			packet_parse)
 	}
+
+	//启动定时器
+	timeTickerChan := time.Tick(time.Millisecond * time.Duration(server_json_info.Io_time_check_))
+	go func() {
+		for {
+			//发送自检消息
+			var message = new(events.Io_Info)
+			message.Message_type_ = events.Timer_Check
+			chan_work_.Add_Message(message)
+			<-timeTickerChan
+		}
+	}()
 
 	//测试关闭监听流程
 	//time.Sleep(1 * time.Second)
