@@ -177,16 +177,18 @@ func main() {
 	}
 
 	//启动定时器
-	timeTickerChan := time.Tick(time.Millisecond * time.Duration(server_json_info.Io_time_check_))
-	go func() {
-		for {
-			//发送自检消息
-			var message = new(events.Io_Info)
-			message.Message_type_ = events.Timer_Check
-			chan_work_.Add_Message(message)
-			<-timeTickerChan
-		}
-	}()
+	if server_json_info.Io_time_check_ > 0 {
+		timeTickerChan := time.Tick(time.Millisecond * time.Duration(server_json_info.Io_time_check_))
+		go func() {
+			for {
+				//发送自检消息
+				var message = new(events.Io_Info)
+				message.Message_type_ = events.Timer_Check
+				chan_work_.Add_Message(message)
+				<-timeTickerChan
+			}
+		}()
+	}
 
 	//测试关闭监听流程
 	//time.Sleep(1 * time.Second)
