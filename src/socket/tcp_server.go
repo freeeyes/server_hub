@@ -84,8 +84,9 @@ func (tcp_server *Tcp_server) Handle_Connection(c net.Conn, packet_parse events.
 			var message = new(events.Io_Info)
 			message.Session_id_ = session.Get_Session_ID()
 			message.Message_type_ = events.Io_Event_Data
-			message.Mesaage_data_ = packet
-			message.Message_Len_ = len(packet)
+			message.Mesaage_data_ = packet.Data_
+			message.Message_Len_ = packet.Data_len_
+			message.Command_id_ = packet.Command_id_
 			message.Session_info_ = session
 			tcp_server.chan_work_.Add_Message(message)
 		}

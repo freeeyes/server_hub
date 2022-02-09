@@ -19,13 +19,13 @@ import (
 
 type Listen_group struct {
 	tcp_listen_list_    map[int]*socket.Tcp_server
-	udp_listen_list_    map[int]*socket.Udp_Serve
+	udp_listen_list_    map[int]*socket.Udp_Server
 	serial_listen_list_ map[int]*socket.Serial_Server
 }
 
 func (listen_group *Listen_group) Init() {
 	listen_group.tcp_listen_list_ = make(map[int]*socket.Tcp_server)
-	listen_group.udp_listen_list_ = make(map[int]*socket.Udp_Serve)
+	listen_group.udp_listen_list_ = make(map[int]*socket.Udp_Server)
 	listen_group.serial_listen_list_ = make(map[int]*socket.Serial_Server)
 }
 
@@ -147,7 +147,7 @@ func main() {
 
 	//启动udp监听
 	for _, tcp_server_config := range server_json_info.Udp_Server_ {
-		var udp_server = new(socket.Udp_Serve)
+		var udp_server = new(socket.Udp_Server)
 
 		listen_group.udp_listen_list_[listen_id] = udp_server
 		listen_id++

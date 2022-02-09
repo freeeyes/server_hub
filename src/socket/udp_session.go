@@ -1,6 +1,9 @@
 package socket
 
-import "net"
+import (
+	"net"
+	"strconv"
+)
 
 type Udp_Session struct {
 	session_id_     int
@@ -31,6 +34,14 @@ func (udp_session *Udp_Session) Init(session_id int, client_ip string, client_po
 
 func (udp_session *Udp_Session) Close_Io() {
 	//udp无法关闭
+}
+
+func (udp_session *Udp_Session) Get_listen_Info() string {
+	return udp_session.server_ip_ + ":" + udp_session.server_port_
+}
+
+func (udp_session *Udp_Session) Get_remote_info() string {
+	return udp_session.client_ip_ + ":" + strconv.Itoa(udp_session.client_port_)
 }
 
 func (udp_session *Udp_Session) Send_Io(data []byte, data_len int) {

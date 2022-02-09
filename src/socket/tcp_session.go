@@ -66,6 +66,14 @@ func (tcp_session *Tcp_Session) Close_Io() {
 	tcp_session.session_io_.Close()
 }
 
+func (tcp_session *Tcp_Session) Get_listen_Info() string {
+	return tcp_session.server_ip_ + ":" + tcp_session.server_port_
+}
+
+func (tcp_session *Tcp_Session) Get_remote_info() string {
+	return tcp_session.client_ip_ + ":" + tcp_session.client_port_
+}
+
 func (tcp_session *Tcp_Session) Get_Recv_Buff() []byte {
 	return tcp_session.recv_buff_
 }

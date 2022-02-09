@@ -7,7 +7,7 @@ import (
 	"strconv"
 )
 
-type Udp_Serve struct {
+type Udp_Server struct {
 	session_id_count_  int
 	server_ip_         string
 	server_port_       string
@@ -20,13 +20,13 @@ type Udp_Serve struct {
 	listen_close_chan_ chan int
 }
 
-func (udp_server *Udp_Serve) Send_finish_listen_message() {
+func (udp_server *Udp_Server) Send_finish_listen_message() {
 	//发送消息，所有链接关闭结束。现在可以关闭监听了
 	fmt.Println("[Udp_Serve::Send_finish_listen_message]send message listen close")
 	udp_server.listen_close_chan_ <- 1
 }
 
-func (udp_server *Udp_Serve) Finial_Finish() {
+func (udp_server *Udp_Server) Finial_Finish() {
 	//监听关闭，回收相关资源
 
 	//遍历map,并关闭链接客户端对象
@@ -58,12 +58,12 @@ func (udp_server *Udp_Serve) Finial_Finish() {
 	fmt.Println("[Udp_Serve::Finial_Finish]close ok")
 }
 
-func (udp_server *Udp_Serve) Show() {
+func (udp_server *Udp_Server) Show() {
 	fmt.Println("[Udp_Serve::show]server ip=", udp_server.server_ip_)
 	fmt.Println("[Udp_Serve::show]server port=", udp_server.server_port_)
 }
 
-func (udp_server *Udp_Serve) Recv_udp_data() uint16 {
+func (udp_server *Udp_Server) Recv_udp_data() uint16 {
 	recv_data := make([]byte, udp_server.recv_buff_size_)
 	for {
 		// 读取数据
@@ -119,8 +119,9 @@ func (udp_server *Udp_Serve) Recv_udp_data() uint16 {
 				var message = new(events.Io_Info)
 				message.Session_id_ = session.Get_Session_ID()
 				message.Message_type_ = events.Io_Event_Data
-				message.Mesaage_data_ = packet
-				message.Message_Len_ = len(packet)
+				message.Mesaage_data_ = packet.Data_
+				message.Message_Len_ = packet.Data_len_
+				message.Command_id_ = packet.Command_id_
 				message.Session_info_ = session
 				udp_server.chan_work_.Add_Message(message)
 			}
@@ -130,7 +131,7 @@ func (udp_server *Udp_Serve) Recv_udp_data() uint16 {
 	return 0
 }
 
-func (udp_server *Udp_Serve) Listen(ip string, port string, chan_work *events.Chan_Work, recv_buff_size int, send_buff_size int, packet_parse events.Io_buff_to_packet) uint16 {
+func (udp_server *Udp_Server) Listen(ip string, port string, chan_work *events.Chan_Work, recv_buff_size int, send_buff_size int, packet_parse events.Io_buff_to_packet) uint16 {
 	udp_server.session_id_count_ = 1
 	udp_server.server_ip_ = ip
 	udp_server.server_port_ = port
@@ -163,7 +164,7 @@ func (udp_server *Udp_Serve) Listen(ip string, port string, chan_work *events.Ch
 	return udp_server.Recv_udp_data()
 }
 
-func (udp_server *Udp_Serve) Close() {
+func (udp_server *Udp_Server) Close() {
 	fmt.Println("[Udp_Serve::Close]server ip=", udp_server.server_ip_)
 	fmt.Println("[Udp_Serve::Close]server port=", udp_server.server_ip_)
 	udp_server.listen_.Close()

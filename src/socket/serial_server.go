@@ -90,8 +90,9 @@ func (serial_Server *Serial_Server) Listen(session_id int, name string, frequenc
 			var message = new(events.Io_Info)
 			message.Session_id_ = serial_Server.Session_.Get_Session_ID()
 			message.Message_type_ = events.Io_Event_Data
-			message.Mesaage_data_ = packet
-			message.Message_Len_ = len(packet)
+			message.Mesaage_data_ = packet.Data_
+			message.Message_Len_ = packet.Data_len_
+			message.Command_id_ = packet.Command_id_
 			message.Session_info_ = &serial_Server.Session_
 			serial_Server.chan_work_.Add_Message(message)
 		}

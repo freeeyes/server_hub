@@ -3,6 +3,7 @@ package socket
 import (
 	"fmt"
 	"server_hub/serial"
+	"strconv"
 )
 
 type Serial_Session struct {
@@ -27,6 +28,14 @@ func (serial_Session *Serial_Session) Init(session_id int, name string, frequenc
 	serial_Session.send_buff_ = make([]byte, serial_Session.send_buff_size_)
 	serial_Session.serial_port_ = serial_port
 	serial_Session.write_len_ = 0
+}
+
+func (serial_Session *Serial_Session) Get_listen_Info() string {
+	return serial_Session.serial_name_ + ":" + strconv.Itoa(serial_Session.serial_frequency_)
+}
+
+func (serial_Session *Serial_Session) Get_remote_info() string {
+	return ""
 }
 
 func (serial_Session *Serial_Session) Get_write_buff() int {

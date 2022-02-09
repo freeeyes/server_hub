@@ -3,6 +3,7 @@ package server_logic
 import (
 	"encoding/binary"
 	"fmt"
+	"server_hub/common"
 )
 
 //负责处理接收和发送数据包解析和加密
@@ -11,8 +12,8 @@ import (
 type Io_buff_to_packet_logoc struct {
 }
 
-func (io_buff_to_packet_logoc *Io_buff_to_packet_logoc) Recv_buff_to_packet(data []byte, data_len int) ([][]byte, int, bool) {
-	var packet_list [][]byte
+func (io_buff_to_packet_logoc *Io_buff_to_packet_logoc) Recv_buff_to_packet(data []byte, data_len int) ([]*common.Pakcet_info, int, bool) {
+	var packet_list []*common.Pakcet_info
 
 	var read_pos uint32 = 0
 
@@ -35,13 +36,19 @@ func (io_buff_to_packet_logoc *Io_buff_to_packet_logoc) Recv_buff_to_packet(data
 			break
 		}
 
+		packet_info := new(common.Pakcet_info)
 		packet_len := 40 + packet_size
-		var packet = make([]byte, packet_len)
+		packet_info.Data_ = make([]byte, packet_len)
 		end_pos := uint32(read_pos) + packet_len
 		fmt.Println("[Recv_buff_to_packet]read_pos=", read_pos, ",end_pos=", end_pos)
-		copy(packet, data[read_pos:end_pos])
+		copy(packet_info.Data_, data[read_pos:end_pos])
 
-		packet_list = append(packet_list, packet)
+		//解析出对应的command_id
+		packet_command := binary.LittleEndian.Uint16(packet_info.Data_[2:4])
+		packet_info.Command_id_ = packet_command
+		packet_info.Data_len_ = packet_len
+
+		packet_list = append(packet_list, packet_info)
 		read_pos += packet_len
 
 	}
