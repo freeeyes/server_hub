@@ -96,10 +96,6 @@ func (udp_server *Udp_Server) Recv_udp_data() uint16 {
 			var message = new(events.Io_Info)
 			message.Session_id_ = session.session_id_
 			message.Message_type_ = events.Io_Event_Connect
-			message.Server_ip_info_.Ip_ = session.server_ip_
-			message.Server_ip_info_.Port_ = session.server_port_
-			message.Client_ip_info_.Ip_ = session.client_ip_
-			message.Client_ip_info_.Port_ = strconv.Itoa(session.client_port_)
 			udp_server.chan_work_.Add_Message(message)
 		}
 

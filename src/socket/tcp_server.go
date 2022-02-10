@@ -38,10 +38,6 @@ func (tcp_server *Tcp_server) Handle_Connection(c net.Conn, packet_parse events.
 	var message = new(events.Io_Info)
 	message.Session_id_ = tcp_server.session_id_count_
 	message.Message_type_ = events.Io_Event_Connect
-	message.Server_ip_info_.Ip_ = session.server_ip_
-	message.Server_ip_info_.Port_ = session.server_port_
-	message.Client_ip_info_.Ip_ = session.client_ip_
-	message.Client_ip_info_.Port_ = session.client_port_
 	message.Session_info_ = session
 	tcp_server.chan_work_.Add_Message(message)
 

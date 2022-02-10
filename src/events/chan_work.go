@@ -28,8 +28,6 @@ type Io_session_info struct {
 //数据消息包
 type Io_Info struct {
 	Session_id_      int
-	Server_ip_info_  common.Ip_info
-	Client_ip_info_  common.Ip_info
 	Message_type_    int
 	Mesaage_data_    []byte
 	Message_Len_     uint32

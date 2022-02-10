@@ -2,7 +2,6 @@ package server_logic
 
 import (
 	"encoding/binary"
-	"fmt"
 	"server_hub/common"
 )
 
@@ -22,7 +21,7 @@ func (io_buff_to_packet_logoc *Io_buff_to_packet_logoc) Recv_buff_to_packet(data
 		if uint32(data_len)-read_pos < 40 {
 			break
 		}
-		fmt.Println("[Recv_buff_to_packet]data_len-read_pos=", uint32(data_len)-read_pos)
+		//fmt.Println("[Recv_buff_to_packet]data_len-read_pos=", uint32(data_len)-read_pos)
 
 		packet_size := binary.LittleEndian.Uint32(data[read_pos+4 : read_pos+8])
 
@@ -40,7 +39,7 @@ func (io_buff_to_packet_logoc *Io_buff_to_packet_logoc) Recv_buff_to_packet(data
 		packet_len := 40 + packet_size
 		packet_info.Data_ = make([]byte, packet_len)
 		end_pos := uint32(read_pos) + packet_len
-		fmt.Println("[Recv_buff_to_packet]read_pos=", read_pos, ",end_pos=", end_pos)
+		//fmt.Println("[Recv_buff_to_packet]read_pos=", read_pos, ",end_pos=", end_pos)
 		copy(packet_info.Data_, data[read_pos:end_pos])
 
 		//解析出对应的command_id
