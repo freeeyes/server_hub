@@ -1,5 +1,7 @@
 package common
 
+import "sync"
+
 //IP信息
 type Ip_info struct {
 	Ip_   string
@@ -56,4 +58,26 @@ type Load_server_logic interface {
 //逻辑模块接口
 type Server_logic_info interface {
 	Init(load_serevr_logic Load_server_logic)
+}
+
+type Session_counter_interface interface {
+	Init()
+	Get_session_id() int
+}
+
+//Session计数器
+type Session_counter_manager struct {
+	mutex_          sync.Mutex
+	session_counter int
+}
+
+func (session_counter_manager *Session_counter_manager) Init() {
+	session_counter_manager.session_counter = 0
+}
+
+func (session_counter_manager *Session_counter_manager) Get_session_id() int {
+	session_counter_manager.mutex_.Lock()
+	session_counter_manager.session_counter++
+	session_counter_manager.mutex_.Unlock()
+	return session_counter_manager.session_counter
 }

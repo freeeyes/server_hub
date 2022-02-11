@@ -119,6 +119,10 @@ func main() {
 
 	go Catch_sig(signals, done)
 
+	//启动计数器
+	var session_counter_interface common.Session_counter_interface = new(common.Session_counter_manager)
+	session_counter_interface.Init()
+
 	//启动IO事件处理线程
 	chan_work_ := new(events.Chan_Work)
 
@@ -139,6 +143,7 @@ func main() {
 		go tcp_server.Listen(tcp_server_config.Server_ip_,
 			tcp_server_config.Server_port_,
 			chan_work_,
+			session_counter_interface,
 			server_json_info.Recv_buff_size_,
 			server_json_info.Send_buff_size_,
 			packet_parse)
@@ -155,6 +160,7 @@ func main() {
 		go udp_server.Listen(tcp_server_config.Server_ip_,
 			tcp_server_config.Server_port_,
 			chan_work_,
+			session_counter_interface,
 			server_json_info.Recv_buff_size_,
 			server_json_info.Send_buff_size_,
 			packet_parse)
@@ -167,10 +173,10 @@ func main() {
 		listen_group.serial_listen_list_[listen_id] = serial_Server
 		listen_id++
 
-		go serial_Server.Listen(serial_server_config.Serial_session_id_,
-			serial_server_config.Serial_name_,
+		go serial_Server.Listen(serial_server_config.Serial_name_,
 			serial_server_config.Serial_frequency_,
 			chan_work_,
+			session_counter_interface,
 			server_json_info.Recv_buff_size_,
 			server_json_info.Send_buff_size_,
 			packet_parse)

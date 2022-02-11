@@ -66,7 +66,7 @@ func (tcp_client *Tcp_client) Connct(session_id int, server_ip string, server_po
 	for {
 		reqLen, err := tcp_client.client_conn_.Read(tcp_client.session_.Get_recv_buff())
 		if err != nil || reqLen == 0 {
-			fmt.Println(err)
+			fmt.Println("[Tcp_client::Handle_Connection]session id=", tcp_client.session_.Get_Session_ID(), ",err=", err)
 			break
 		}
 
@@ -94,7 +94,7 @@ func (tcp_client *Tcp_client) Connct(session_id int, server_ip string, server_po
 		}
 
 		tcp_client.session_.Reset_read_buff(read_len)
-		fmt.Println("[Tcp_Serve::Handle_Connection]writelen=", tcp_client.session_.Get_write_buff())
+		fmt.Println("[Tcp_client::Handle_Connection]writelen=", tcp_client.session_.Get_write_buff())
 	}
 
 	return true

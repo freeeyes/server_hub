@@ -2,19 +2,22 @@ package socket
 
 import (
 	"fmt"
+	"server_hub/common"
 	"server_hub/events"
 	"server_hub/serial"
 )
 
 type Serial_Server struct {
-	serial_name_       string
-	serial_frequency_  int
-	chan_work_         *events.Chan_Work
-	recv_buff_size_    int
-	send_buff_size_    int
-	packet_parse_      events.Io_buff_to_packet
-	Session_           Serial_Session
-	listen_close_chan_ chan int
+	session_counter_interface_ common.Session_counter_interface
+	session_id_                int
+	serial_name_               string
+	serial_frequency_          int
+	chan_work_                 *events.Chan_Work
+	recv_buff_size_            int
+	send_buff_size_            int
+	packet_parse_              events.Io_buff_to_packet
+	Session_                   Serial_Session
+	listen_close_chan_         chan int
 }
 
 func (serial_Server *Serial_Server) Send_finish_listen_message() {
@@ -46,12 +49,13 @@ func (serial_Server *Serial_Server) Finial_Finish() {
 	fmt.Println("[Serial_Server::Finial_Finish]close ok")
 }
 
-func (serial_Server *Serial_Server) Listen(session_id int, name string, frequency int, chan_work *events.Chan_Work, recv_buff_size int, send_buff_size int, packet_parse events.Io_buff_to_packet) uint16 {
+func (serial_Server *Serial_Server) Listen(name string, frequency int, chan_work *events.Chan_Work, session_counter_interface common.Session_counter_interface, recv_buff_size int, send_buff_size int, packet_parse events.Io_buff_to_packet) uint16 {
 	serial_Server.serial_name_ = name
 	serial_Server.serial_frequency_ = frequency
 	serial_Server.chan_work_ = chan_work
 	serial_Server.recv_buff_size_ = recv_buff_size
 	serial_Server.send_buff_size_ = send_buff_size
+	serial_Server.session_counter_interface_ = session_counter_interface
 
 	c := &serial.Config{Name: serial_Server.serial_name_, Baud: serial_Server.serial_frequency_}
 	s, err := serial.OpenPort(c)
@@ -61,8 +65,9 @@ func (serial_Server *Serial_Server) Listen(session_id int, name string, frequenc
 	}
 
 	serial_Server.packet_parse_ = packet_parse
+	serial_Server.session_id_ = serial_Server.session_counter_interface_.Get_session_id()
 
-	serial_Server.Session_.Init(session_id,
+	serial_Server.Session_.Init(serial_Server.session_id_,
 		serial_Server.serial_name_,
 		serial_Server.serial_frequency_,
 		serial_Server.recv_buff_size_,

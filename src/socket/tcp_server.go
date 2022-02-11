@@ -3,6 +3,7 @@ package socket
 import (
 	"fmt"
 	"net"
+	"server_hub/common"
 	"server_hub/events"
 	"strings"
 )
@@ -11,21 +12,22 @@ import (
 //add by freeeyes
 
 type Tcp_server struct {
-	session_id_count_  int
-	server_ip_         string
-	server_port_       string
-	listen_            net.Listener
-	session_list_      map[int]*Tcp_Session
-	chan_work_         *events.Chan_Work
-	recv_buff_size_    int
-	send_buff_size_    int
-	packet_parse_      events.Io_buff_to_packet
-	listen_close_chan_ chan int
+	Session_counter_interface_ common.Session_counter_interface
+	server_ip_                 string
+	server_port_               string
+	listen_                    net.Listener
+	session_list_              map[int]*Tcp_Session
+	chan_work_                 *events.Chan_Work
+	recv_buff_size_            int
+	send_buff_size_            int
+	packet_parse_              events.Io_buff_to_packet
+	listen_close_chan_         chan int
 }
 
 func (tcp_server *Tcp_server) Handle_Connection(c net.Conn, packet_parse events.Io_buff_to_packet) {
 	var session = new(Tcp_Session)
-	session.Init(tcp_server.session_id_count_,
+	session_id := tcp_server.Session_counter_interface_.Get_session_id()
+	session.Init(session_id,
 		strings.Split(c.RemoteAddr().String(), ":")[0],
 		strings.Split(c.RemoteAddr().String(), ":")[1],
 		tcp_server.server_ip_,
@@ -36,14 +38,13 @@ func (tcp_server *Tcp_server) Handle_Connection(c net.Conn, packet_parse events.
 
 	//添加链接建立事件
 	var message = new(events.Io_Info)
-	message.Session_id_ = tcp_server.session_id_count_
+	message.Session_id_ = session_id
 	message.Message_type_ = events.Io_Event_Connect
 	message.Session_info_ = session
 	tcp_server.chan_work_.Add_Message(message)
 
 	tcp_server.session_list_[session.Get_Session_ID()] = session
 
-	tcp_server.session_id_count_++
 	//session.Show()
 
 	defer func() {
@@ -60,7 +61,7 @@ func (tcp_server *Tcp_server) Handle_Connection(c net.Conn, packet_parse events.
 	for {
 		reqLen, err := c.Read(session.Get_recv_buff())
 		if err != nil || reqLen == 0 {
-			fmt.Println(err)
+			fmt.Println("[Tcp_Serve::Handle_Connection]sessionID=", session.Get_Session_ID(), ", read err=", err)
 			return
 		}
 
@@ -127,13 +128,13 @@ func (tcp_server *Tcp_server) Finial_Finish() {
 	fmt.Println("[Tcp_Serve::Finial_Finish]close ok")
 }
 
-func (tcp_server *Tcp_server) Listen(ip string, port string, chan_work *events.Chan_Work, recv_buff_size int, send_buff_size int, packet_parse events.Io_buff_to_packet) uint16 {
-	tcp_server.session_id_count_ = 1
+func (tcp_server *Tcp_server) Listen(ip string, port string, chan_work *events.Chan_Work, session_counter_interface common.Session_counter_interface, recv_buff_size int, send_buff_size int, packet_parse events.Io_buff_to_packet) uint16 {
 	tcp_server.server_ip_ = ip
 	tcp_server.server_port_ = port
 	tcp_server.chan_work_ = chan_work
 	tcp_server.recv_buff_size_ = recv_buff_size
 	tcp_server.send_buff_size_ = send_buff_size
+	tcp_server.Session_counter_interface_ = session_counter_interface
 
 	//初始化解析接口
 	tcp_server.packet_parse_ = packet_parse

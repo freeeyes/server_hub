@@ -3,21 +3,22 @@ package socket
 import (
 	"fmt"
 	"net"
+	"server_hub/common"
 	"server_hub/events"
 	"strconv"
 )
 
 type Udp_Server struct {
-	session_id_count_  int
-	server_ip_         string
-	server_port_       string
-	listen_            *net.UDPConn
-	session_list_      map[string]*Udp_Session
-	chan_work_         *events.Chan_Work
-	recv_buff_size_    int
-	send_buff_size_    int
-	packet_parse_      events.Io_buff_to_packet
-	listen_close_chan_ chan int
+	Session_counter_interface_ common.Session_counter_interface
+	server_ip_                 string
+	server_port_               string
+	listen_                    *net.UDPConn
+	session_list_              map[string]*Udp_Session
+	chan_work_                 *events.Chan_Work
+	recv_buff_size_            int
+	send_buff_size_            int
+	packet_parse_              events.Io_buff_to_packet
+	listen_close_chan_         chan int
 }
 
 func (udp_server *Udp_Server) Send_finish_listen_message() {
@@ -80,16 +81,17 @@ func (udp_server *Udp_Server) Recv_udp_data() uint16 {
 
 		session, ok := udp_server.session_list_[client_key]
 		if !ok {
+			session_id := udp_server.Session_counter_interface_.Get_session_id()
+
 			//不存在
 			session = new(Udp_Session)
-			session.Init(udp_server.session_id_count_,
+			session.Init(session_id,
 				client_ip,
 				client_port,
 				udp_server.server_ip_,
 				udp_server.server_port_,
 				udp_server.recv_buff_size_,
 				udp_server.send_buff_size_)
-			udp_server.session_id_count_++
 			udp_server.session_list_[client_key] = session
 
 			//添加链接建立事件
@@ -127,13 +129,13 @@ func (udp_server *Udp_Server) Recv_udp_data() uint16 {
 	return 0
 }
 
-func (udp_server *Udp_Server) Listen(ip string, port string, chan_work *events.Chan_Work, recv_buff_size int, send_buff_size int, packet_parse events.Io_buff_to_packet) uint16 {
-	udp_server.session_id_count_ = 1
+func (udp_server *Udp_Server) Listen(ip string, port string, chan_work *events.Chan_Work, session_counter_interface common.Session_counter_interface, recv_buff_size int, send_buff_size int, packet_parse events.Io_buff_to_packet) uint16 {
 	udp_server.server_ip_ = ip
 	udp_server.server_port_ = port
 	udp_server.chan_work_ = chan_work
 	udp_server.recv_buff_size_ = recv_buff_size
 	udp_server.send_buff_size_ = send_buff_size
+	udp_server.Session_counter_interface_ = session_counter_interface
 
 	//初始化解析接口
 	udp_server.packet_parse_ = packet_parse
