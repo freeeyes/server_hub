@@ -63,11 +63,24 @@ func (serial_Session *Serial_Session) Get_read_buff() []byte {
 	return serial_Session.recv_buff_
 }
 
-func (serial_Session *Serial_Session) Send_Io(data []byte, data_len int) {
-	send_len, err := serial_Session.serial_port_.Write(data[:data_len])
-	if err != nil {
-		fmt.Println("[Serial_Session::Send_Io]write data fail!(", send_len, "),", err)
+func (serial_Session *Serial_Session) Send_Io(data []byte, data_len int) bool {
+	var send_len = 0
+
+	for {
+		if send_len == data_len {
+			break
+		}
+
+		curr_send_len, err := serial_Session.serial_port_.Write(data[:data_len])
+		if err != nil {
+			//发送数据出错，打印错误信息
+			fmt.Println("[Send_Io]session_id=", serial_Session.session_id_, "send err=", err)
+			return false
+		}
+		send_len += curr_send_len
 	}
+
+	return true
 }
 
 func (serial_Session *Serial_Session) Close_Io() {

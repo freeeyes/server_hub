@@ -58,8 +58,25 @@ func (tcp_session *Tcp_Session) Get_read_buff() []byte {
 	return tcp_session.recv_buff_
 }
 
-func (tcp_session *Tcp_Session) Send_Io(data []byte, data_len int) {
-	tcp_session.session_io_.Write(data[:data_len])
+func (tcp_session *Tcp_Session) Send_Io(data []byte, data_len int) bool {
+	//循环发送，直到发送成功
+	var send_len = 0
+
+	for {
+		if send_len == data_len {
+			break
+		}
+
+		curr_send_len, err := tcp_session.session_io_.Write(data[:data_len])
+		if err != nil {
+			//发送数据出错，打印错误信息
+			fmt.Println("[Send_Io]session_id=", tcp_session.session_id_, "send err=", err)
+			return false
+		}
+		send_len += curr_send_len
+	}
+
+	return true
 }
 
 func (tcp_session *Tcp_Session) Close_Io() {

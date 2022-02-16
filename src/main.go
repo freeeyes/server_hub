@@ -182,6 +182,23 @@ func main() {
 			packet_parse)
 	}
 
+	//启动tcp服务器间链接
+	var client_tcp_manager = new(socket.Client_tcp_manager)
+	client_tcp_manager.Init(chan_work_,
+		session_counter_interface,
+		server_json_info.Recv_buff_size_,
+		server_json_info.Send_buff_size_)
+
+	//驱动udp服务器间链接
+	var client_udp_manager = new(socket.Client_udp_manager)
+	client_udp_manager.Init(chan_work_,
+		session_counter_interface,
+		server_json_info.Recv_buff_size_,
+		server_json_info.Send_buff_size_)
+
+	chan_work_.Add_tcp_client_manager(client_tcp_manager)
+	chan_work_.Add_tcp_client_manager(client_udp_manager)
+
 	//启动定时器
 	if server_json_info.Io_time_check_ > 0 {
 		timeTickerChan := time.Tick(time.Millisecond * time.Duration(server_json_info.Io_time_check_))

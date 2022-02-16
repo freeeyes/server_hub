@@ -219,3 +219,10 @@ func (client_tcp_manager *Client_tcp_manager) Close(session_id int) {
 		delete(client_tcp_manager.client_tcp_list_, session_id)
 	}
 }
+
+func (client_tcp_manager *Client_tcp_manager) Reconnect(session_id int) {
+	if v, ok := client_tcp_manager.client_tcp_list_[session_id]; ok {
+		//找到了，重连它
+		v.ReConnect()
+	}
+}

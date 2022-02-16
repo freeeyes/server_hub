@@ -1,6 +1,7 @@
 package socket
 
 import (
+	"fmt"
 	"net"
 	"strconv"
 )
@@ -44,8 +45,14 @@ func (udp_session *Udp_Session) Get_remote_info() string {
 	return udp_session.client_ip_ + ":" + strconv.Itoa(udp_session.client_port_)
 }
 
-func (udp_session *Udp_Session) Send_Io(data []byte, data_len int) {
+func (udp_session *Udp_Session) Send_Io(data []byte, data_len int) bool {
 	if data_len > 0 {
-		udp_session.socket_.WriteToUDP(data, &net.UDPAddr{IP: net.ParseIP(udp_session.client_ip_), Port: udp_session.client_port_})
+		_, err := udp_session.socket_.WriteToUDP(data, &net.UDPAddr{IP: net.ParseIP(udp_session.client_ip_), Port: udp_session.client_port_})
+		if err != nil {
+			fmt.Println("[Udp_Session::Send_Io]session_id=", udp_session.session_id_, "send err=", err)
+			return false
+		}
 	}
+
+	return true
 }

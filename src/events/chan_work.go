@@ -25,6 +25,15 @@ type Io_session_info struct {
 	active_time_  int64
 }
 
+//服务器间链接接口
+type Client_io_manager interface {
+	Connect_tcp(server_ip string, server_port int, packet_parse Io_buff_to_packet) int
+	Time_Check()
+	Close_all()
+	Close(session_id int)
+	Reconnect(session_id int)
+}
+
 //数据消息包
 type Io_Info struct {
 	Session_id_      int
@@ -45,6 +54,18 @@ type Chan_Work struct {
 	io_time_check_      int
 	logic_command_list_ map[uint16]func(int, []byte, int, common.Session_Info)
 	logic_list_         []common.Server_logic_info
+	client_tcp_manager_ Client_io_manager
+	client_udp_manager_ Client_io_manager
+}
+
+//注册tcp服务器间对象
+func (chan_work *Chan_Work) Add_tcp_client_manager(client_tcp_manager Client_io_manager) {
+	chan_work.client_tcp_manager_ = client_tcp_manager
+}
+
+//注册udp服务器间对象
+func (chan_work *Chan_Work) Add_udp_client_manager(client_udp_manager Client_io_manager) {
+	chan_work.client_udp_manager_ = client_udp_manager
 }
 
 //注册消费逻辑
@@ -119,6 +140,14 @@ func (chan_work *Chan_Work) do_time_check() {
 	}
 
 	//fmt.Println("[do_chan_work]timeCheck End(", time.Now().String(), ") do")
+	//服务器间链接定时监测
+	if chan_work.client_tcp_manager_ != nil {
+		chan_work.client_tcp_manager_.Time_Check()
+	}
+
+	if chan_work.client_udp_manager_ != nil {
+		chan_work.client_udp_manager_.Time_Check()
+	}
 }
 
 func (chan_work *Chan_Work) Start(chan_count int, io_timeout_millsecond int) {

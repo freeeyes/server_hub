@@ -220,3 +220,10 @@ func (client_udp_manager *Client_udp_manager) Close(session_id int) {
 		delete(client_udp_manager.client_tcp_list_, session_id)
 	}
 }
+
+func (client_udp_manager *Client_udp_manager) Reconnect(session_id int) {
+	if v, ok := client_udp_manager.client_tcp_list_[session_id]; ok {
+		//找到了，重新链接它
+		v.ReConnect()
+	}
+}
