@@ -180,3 +180,45 @@ func (tcp_server *Tcp_server) Close() {
 	fmt.Println("[Tcp_Serve::Close]server port=", tcp_server.server_port_)
 	tcp_server.listen_.Close()
 }
+
+type Tcp_server_manager struct {
+	tcp_listen_list_           map[uint16]*Tcp_server
+	chan_work_                 *events.Chan_Work
+	session_counter_interface_ common.Session_counter_interface
+	recv_buff_size_            int
+	send_buff_size_            int
+	tcp_server_count_          uint16
+}
+
+func (tcp_server_manager *Tcp_server_manager) Init(chan_work *events.Chan_Work, session_counter_interface common.Session_counter_interface, recv_buff_size int, send_buff_size int) {
+	tcp_server_manager.tcp_listen_list_ = make(map[uint16]*Tcp_server)
+	tcp_server_manager.chan_work_ = chan_work
+	tcp_server_manager.session_counter_interface_ = session_counter_interface
+	tcp_server_manager.recv_buff_size_ = recv_buff_size
+	tcp_server_manager.send_buff_size_ = send_buff_size
+	tcp_server_manager.tcp_server_count_ = 1
+}
+
+func (tcp_server_manager *Tcp_server_manager) Listen(ip string, port string, packet_parse events.Io_buff_to_packet) uint16 {
+	curr_tcp_server_count := tcp_server_manager.tcp_server_count_
+	tcp_server := new(Tcp_server)
+	tcp_server_manager.tcp_listen_list_[curr_tcp_server_count] = tcp_server
+	tcp_server_manager.tcp_server_count_++
+
+	go tcp_server.Listen(ip,
+		port,
+		tcp_server_manager.chan_work_,
+		tcp_server_manager.session_counter_interface_,
+		tcp_server_manager.recv_buff_size_,
+		tcp_server_manager.send_buff_size_,
+		packet_parse)
+
+	return curr_tcp_server_count
+}
+
+func (tcp_server_manager *Tcp_server_manager) Close() {
+	for _, tcp_server := range tcp_server_manager.tcp_listen_list_ {
+		tcp_server.Close()
+	}
+	fmt.Println("[Tcp_server_manager::Close]close finish")
+}

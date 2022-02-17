@@ -164,6 +164,7 @@ type Client_udp_manager struct {
 	session_counter_interface_ common.Session_counter_interface
 	recv_buff_size_            int
 	send_buff_size_            int
+	client_close_chan_         chan int
 }
 
 func (client_udp_manager *Client_udp_manager) Init(chan_work *events.Chan_Work, session_counter_interface common.Session_counter_interface, recv_buff_size int, send_buff_size int) {
@@ -211,6 +212,25 @@ func (client_udp_manager *Client_udp_manager) Close_all() {
 
 		delete(client_udp_manager.client_tcp_list_, k)
 	}
+
+	//发送天庭消息结束信息
+	client_udp_manager.client_close_chan_ = make(chan int, 1)
+
+	//发送监听结束消息
+	var message = new(events.Io_Info)
+	message.Session_id_ = 0
+	message.Message_type_ = events.Io_Listen_Close
+	message.Io_LIsten_Close_ = client_udp_manager
+	client_udp_manager.chan_work_.Add_Message(message)
+
+	for {
+		data := <-client_udp_manager.client_close_chan_
+		if data == 1 {
+			break
+		}
+	}
+
+	fmt.Println("[Client_udp_manager::Close_all] is finish")
 }
 
 func (client_udp_manager *Client_udp_manager) Close(session_id int) {
@@ -226,4 +246,10 @@ func (client_udp_manager *Client_udp_manager) Reconnect(session_id int) {
 		//找到了，重新链接它
 		v.ReConnect()
 	}
+}
+
+func (client_udp_manager *Client_udp_manager) Send_finish_listen_message() {
+	//发送消息，所有链接关闭结束。现在可以关闭监听了
+	fmt.Println("[client_udp_manager::Send_finish_listen_message]send message listen close")
+	client_udp_manager.client_close_chan_ <- 1
 }

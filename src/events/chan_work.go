@@ -13,7 +13,7 @@ const (
 	Io_Event_Connect int = iota
 	Io_Event_DisConnect
 	Io_Event_Data
-	Io_Exit
+	Io_Finish
 	Io_Listen_Close
 	Timer_Check
 )
@@ -34,6 +34,40 @@ type Client_io_manager interface {
 	Reconnect(session_id int)
 }
 
+//服务器监听接口
+type Listen_io_manager interface {
+	Close()
+}
+
+//IO接口管理
+type Io_manager struct {
+	Listen_tcp_manager_    Listen_io_manager
+	Listen_udp_manager_    Listen_io_manager
+	Listen_serial_manager_ Listen_io_manager
+	Client_tcp_manager_    Client_io_manager
+	Client_udp_manager_    Client_io_manager
+}
+
+func (io_manager *Io_manager) Set_tcp_manager(listen_tcp_manager Listen_io_manager) {
+	io_manager.Listen_tcp_manager_ = listen_tcp_manager
+}
+
+func (io_manager *Io_manager) Set_udp_manager(listen_udp_manager Listen_io_manager) {
+	io_manager.Listen_udp_manager_ = listen_udp_manager
+}
+
+func (io_manager *Io_manager) Set_serial_manager(listen_serial_manager Listen_io_manager) {
+	io_manager.Listen_serial_manager_ = listen_serial_manager
+}
+
+func (io_manager *Io_manager) Set_client_tcp_manager(listen_client_tcp_manager Client_io_manager) {
+	io_manager.Client_tcp_manager_ = listen_client_tcp_manager
+}
+
+func (io_manager *Io_manager) Set_client_udp_manager(listen_client_udp_manager Client_io_manager) {
+	io_manager.Client_udp_manager_ = listen_client_udp_manager
+}
+
 //数据消息包
 type Io_Info struct {
 	Session_id_      int
@@ -46,16 +80,31 @@ type Io_Info struct {
 }
 
 type Chan_Work struct {
-	chan_work_chan_     chan *Io_Info
-	once_               sync.Once
-	chan_count_         int
-	is_open_            bool
-	Io_Session_List_    map[int]*Io_session_info
-	io_time_check_      int
-	logic_command_list_ map[uint16]func(int, []byte, int, common.Session_Info)
-	logic_list_         []common.Server_logic_info
-	client_tcp_manager_ Client_io_manager
-	client_udp_manager_ Client_io_manager
+	chan_work_chan_        chan *Io_Info
+	once_                  sync.Once
+	chan_count_            int
+	is_open_               bool
+	Io_Session_List_       map[int]*Io_session_info
+	io_time_check_         int
+	logic_command_list_    map[uint16]func(int, []byte, int, common.Session_Info)
+	logic_list_            []common.Server_logic_info
+	client_tcp_manager_    Client_io_manager
+	client_udp_manager_    Client_io_manager
+	listen_tcp_manager_    Listen_io_manager
+	listen_udp_manager_    Listen_io_manager
+	listen_serial_manager_ Listen_io_manager
+}
+
+func (chan_work *Chan_Work) Add_listen_tcp_manager(listen_tcp_manager Listen_io_manager) {
+	chan_work.listen_tcp_manager_ = listen_tcp_manager
+}
+
+func (chan_work *Chan_Work) Add_listen_udp_manager(listen_udp_manager Listen_io_manager) {
+	chan_work.listen_udp_manager_ = listen_udp_manager
+}
+
+func (chan_work *Chan_Work) Add_listen_serial_manager(listen_serial_manager Listen_io_manager) {
+	chan_work.listen_serial_manager_ = listen_serial_manager
 }
 
 //注册tcp服务器间对象
@@ -150,6 +199,30 @@ func (chan_work *Chan_Work) do_time_check() {
 	}
 }
 
+func (chan_work *Chan_Work) Run() {
+	//启动消费者
+	for {
+		data := <-chan_work.chan_work_chan_
+		switch data.Message_type_ {
+		case Io_Event_Connect:
+			chan_work.do_connect(data)
+		case Io_Event_DisConnect:
+			chan_work.do_disconnect(data)
+		case Io_Event_Data:
+			chan_work.do_logic(data)
+		case Io_Listen_Close:
+			chan_work.do_close_listen(data)
+		case Timer_Check:
+			chan_work.do_time_check()
+		case Io_Finish:
+			//全部关闭完成
+			fmt.Println("[do_chan_work]summer is close(", time.Now().String(), ") do")
+			chan_work.Close()
+			return
+		}
+	}
+}
+
 func (chan_work *Chan_Work) Start(chan_count int, io_timeout_millsecond int) {
 	if chan_work.is_open_ {
 		return
@@ -173,36 +246,10 @@ func (chan_work *Chan_Work) Start(chan_count int, io_timeout_millsecond int) {
 	var server_logic_info common.Server_logic_info = new(server_logic.Tcp_io_events_logic)
 	server_logic_info.Init(chan_work)
 	chan_work.logic_list_ = append(chan_work.logic_list_, server_logic_info)
-
-	//启动消费者
-	go func() {
-		for {
-			data := <-chan_work.chan_work_chan_
-			switch data.Message_type_ {
-			case Io_Event_Connect:
-				chan_work.do_connect(data)
-			case Io_Event_DisConnect:
-				chan_work.do_disconnect(data)
-			case Io_Event_Data:
-				chan_work.do_logic(data)
-			case Io_Listen_Close:
-				chan_work.do_close_listen(data)
-			case Timer_Check:
-				chan_work.do_time_check()
-			case Io_Exit:
-				fmt.Println("[do_chan_work]summer is close(", time.Now().String(), ") do")
-				return
-			}
-		}
-	}()
 }
 
 func (chan_work *Chan_Work) Close() {
 	chan_work.once_.Do(func() {
-		var io_info = new(Io_Info)
-		io_info.Session_id_ = 0
-		io_info.Message_type_ = Io_Exit
-		chan_work.chan_work_chan_ <- io_info
 		close(chan_work.chan_work_chan_)
 	})
 }

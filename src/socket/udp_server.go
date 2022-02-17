@@ -8,7 +8,7 @@ import (
 	"strconv"
 )
 
-type Udp_Server struct {
+type Udp_server struct {
 	Session_counter_interface_ common.Session_counter_interface
 	server_ip_                 string
 	server_port_               string
@@ -21,13 +21,13 @@ type Udp_Server struct {
 	listen_close_chan_         chan int
 }
 
-func (udp_server *Udp_Server) Send_finish_listen_message() {
+func (udp_server *Udp_server) Send_finish_listen_message() {
 	//发送消息，所有链接关闭结束。现在可以关闭监听了
 	fmt.Println("[Udp_Serve::Send_finish_listen_message]send message listen close")
 	udp_server.listen_close_chan_ <- 1
 }
 
-func (udp_server *Udp_Server) Finial_Finish() {
+func (udp_server *Udp_server) Finial_Finish() {
 	//监听关闭，回收相关资源
 
 	//遍历map,并关闭链接客户端对象
@@ -59,12 +59,12 @@ func (udp_server *Udp_Server) Finial_Finish() {
 	fmt.Println("[Udp_Serve::Finial_Finish]close ok")
 }
 
-func (udp_server *Udp_Server) Show() {
+func (udp_server *Udp_server) Show() {
 	fmt.Println("[Udp_Serve::show]server ip=", udp_server.server_ip_)
 	fmt.Println("[Udp_Serve::show]server port=", udp_server.server_port_)
 }
 
-func (udp_server *Udp_Server) Recv_udp_data() uint16 {
+func (udp_server *Udp_server) Recv_udp_data() uint16 {
 	recv_data := make([]byte, udp_server.recv_buff_size_)
 	for {
 		// 读取数据
@@ -129,7 +129,7 @@ func (udp_server *Udp_Server) Recv_udp_data() uint16 {
 	return 0
 }
 
-func (udp_server *Udp_Server) Listen(ip string, port string, chan_work *events.Chan_Work, session_counter_interface common.Session_counter_interface, recv_buff_size int, send_buff_size int, packet_parse events.Io_buff_to_packet) uint16 {
+func (udp_server *Udp_server) Listen(ip string, port string, chan_work *events.Chan_Work, session_counter_interface common.Session_counter_interface, recv_buff_size int, send_buff_size int, packet_parse events.Io_buff_to_packet) uint16 {
 	udp_server.server_ip_ = ip
 	udp_server.server_port_ = port
 	udp_server.chan_work_ = chan_work
@@ -162,8 +162,51 @@ func (udp_server *Udp_Server) Listen(ip string, port string, chan_work *events.C
 	return udp_server.Recv_udp_data()
 }
 
-func (udp_server *Udp_Server) Close() {
+func (udp_server *Udp_server) Close() {
 	fmt.Println("[Udp_Serve::Close]server ip=", udp_server.server_ip_)
 	fmt.Println("[Udp_Serve::Close]server port=", udp_server.server_ip_)
 	udp_server.listen_.Close()
+}
+
+type Udp_server_manager struct {
+	udp_listen_list_           map[uint16]*Udp_server
+	chan_work_                 *events.Chan_Work
+	session_counter_interface_ common.Session_counter_interface
+	recv_buff_size_            int
+	send_buff_size_            int
+	udp_server_count_          uint16
+}
+
+func (udp_server_manager *Udp_server_manager) Init(chan_work *events.Chan_Work, session_counter_interface common.Session_counter_interface, recv_buff_size int, send_buff_size int) {
+	udp_server_manager.udp_listen_list_ = make(map[uint16]*Udp_server)
+	udp_server_manager.chan_work_ = chan_work
+	udp_server_manager.session_counter_interface_ = session_counter_interface
+	udp_server_manager.recv_buff_size_ = recv_buff_size
+	udp_server_manager.send_buff_size_ = send_buff_size
+	udp_server_manager.udp_server_count_ = 1
+}
+
+func (udp_server_manager *Udp_server_manager) Listen(ip string, port string, packet_parse events.Io_buff_to_packet) uint16 {
+	curr_udp_server_count := udp_server_manager.udp_server_count_
+	udp_server := new(Udp_server)
+	udp_server_manager.udp_listen_list_[curr_udp_server_count] = udp_server
+	udp_server_manager.udp_server_count_++
+
+	go udp_server.Listen(ip,
+		port,
+		udp_server_manager.chan_work_,
+		udp_server_manager.session_counter_interface_,
+		udp_server_manager.recv_buff_size_,
+		udp_server_manager.send_buff_size_,
+		packet_parse)
+
+	return curr_udp_server_count
+}
+
+func (udp_server_manager *Udp_server_manager) Close() {
+	for _, udp_server := range udp_server_manager.udp_listen_list_ {
+		udp_server.Close()
+	}
+
+	fmt.Println("[Udp_server_manager::Close]close finish")
 }

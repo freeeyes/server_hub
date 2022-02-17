@@ -9,8 +9,7 @@
       "Server_port_":"10030"
     }],
 
-    "Serial_Server_":[{
-    }],
+    "Serial_Server_":[],
 
     "Recv_queue_count_":100,
     "Recv_buff_size_":1024,
