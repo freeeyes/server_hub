@@ -1,3 +1,6 @@
+//go:build !wiondows
+// +build !wiondows
+
 /*
 Goserial is a simple go package to allow you to read and write from
 the serial port as a stream of bytes.
