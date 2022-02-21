@@ -1,3 +1,4 @@
+//go:build windows
 // +build windows
 
 package serial
@@ -23,10 +24,9 @@ type Port struct {
 type structDCB struct {
 	DCBlength, BaudRate                            uint32
 	flags                                          [4]byte
-	wReserved, XonLim, XoffLim                     uint16
+	XonLim, XoffLim                                uint16
 	ByteSize, Parity, StopBits                     byte
 	XonChar, XoffChar, ErrorChar, EofChar, EvtChar byte
-	wReserved1                                     uint16
 }
 
 type structTimeouts struct {
@@ -42,7 +42,13 @@ func openPort(name string, baud int, databits byte, parity Parity, stopbits Stop
 		name = "\\\\.\\" + name
 	}
 
-	h, err := syscall.CreateFile(syscall.StringToUTF16Ptr(name),
+	//syscall.StringToUTF16Ptr(name)
+	func_handle, handle_err := syscall.UTF16PtrFromString(name)
+	if handle_err != nil {
+		return nil, handle_err
+	}
+
+	h, err := syscall.CreateFile(func_handle,
 		syscall.GENERIC_READ|syscall.GENERIC_WRITE,
 		0,
 		nil,
@@ -110,7 +116,7 @@ func (p *Port) Write(buf []byte) (int, error) {
 
 func (p *Port) Read(buf []byte) (int, error) {
 	if p == nil || p.f == nil {
-		return 0, fmt.Errorf("Invalid port on read")
+		return 0, fmt.Errorf("invalid port on read")
 	}
 
 	p.rl.Lock()
@@ -134,15 +140,15 @@ func (p *Port) Flush() error {
 }
 
 var (
-	nSetCommState,
-	nSetCommTimeouts,
-	nSetCommMask,
-	nSetupComm,
-	nGetOverlappedResult,
-	nCreateEvent,
-	nResetEvent,
-	nPurgeComm,
-	nFlushFileBuffers uintptr
+	nSetCommState        uintptr
+	nSetCommTimeouts     uintptr
+	nSetCommMask         uintptr
+	nSetupComm           uintptr
+	nGetOverlappedResult uintptr
+	nCreateEvent         uintptr
+	nResetEvent          uintptr
+	nPurgeComm           uintptr
+	//nFlushFileBuffers uintptr
 )
 
 func init() {
@@ -150,7 +156,12 @@ func init() {
 	if err != nil {
 		panic("LoadLibrary " + err.Error())
 	}
-	defer syscall.FreeLibrary(k32)
+	defer func() {
+		err := syscall.FreeLibrary(k32)
+		if err != nil {
+			panic("FreeLibrary err=" + err.Error())
+		}
+	}()
 
 	nSetCommState = getProcAddr(k32, "SetCommState")
 	nSetCommTimeouts = getProcAddr(k32, "SetCommTimeouts")
@@ -160,7 +171,7 @@ func init() {
 	nCreateEvent = getProcAddr(k32, "CreateEventW")
 	nResetEvent = getProcAddr(k32, "ResetEvent")
 	nPurgeComm = getProcAddr(k32, "PurgeComm")
-	nFlushFileBuffers = getProcAddr(k32, "FlushFileBuffers")
+	//nFlushFileBuffers = getProcAddr(k32, "FlushFileBuffers")
 }
 
 func getProcAddr(lib syscall.Handle, name string) uintptr {
