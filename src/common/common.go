@@ -50,9 +50,25 @@ type Io_Listen interface {
 	Send_finish_listen_message()
 }
 
+//PacketParse解析接口
+type Io_buff_to_packet interface {
+	Recv_buff_to_packet(data []byte, data_len int) ([]*Pakcet_info, int, bool)
+}
+
+//服务器间链接接口
+type Client_io_manager interface {
+	Connect_tcp(server_ip string, server_port int, packet_parse Io_buff_to_packet) int
+	Time_Check()
+	Close_all()
+	Close(session_id int)
+	Reconnect(session_id int)
+}
+
 //数据包事件关联接口
 type Load_server_logic interface {
 	Regedit_command(uint16, func(int, []byte, int, Session_Info)) bool
+	Get_tcp_clientmanager() Client_io_manager
+	Get_udp_clientmanager() Client_io_manager
 }
 
 //逻辑模块接口

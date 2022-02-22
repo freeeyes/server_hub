@@ -17,7 +17,7 @@ type Udp_server struct {
 	chan_work_                 *events.Chan_Work
 	recv_buff_size_            int
 	send_buff_size_            int
-	packet_parse_              events.Io_buff_to_packet
+	packet_parse_              common.Io_buff_to_packet
 	listen_close_chan_         chan int
 }
 
@@ -129,7 +129,7 @@ func (udp_server *Udp_server) Recv_udp_data() uint16 {
 	return 0
 }
 
-func (udp_server *Udp_server) Listen(ip string, port string, chan_work *events.Chan_Work, session_counter_interface common.Session_counter_interface, recv_buff_size int, send_buff_size int, packet_parse events.Io_buff_to_packet) uint16 {
+func (udp_server *Udp_server) Listen(ip string, port string, chan_work *events.Chan_Work, session_counter_interface common.Session_counter_interface, recv_buff_size int, send_buff_size int, packet_parse common.Io_buff_to_packet) uint16 {
 	udp_server.server_ip_ = ip
 	udp_server.server_port_ = port
 	udp_server.chan_work_ = chan_work
@@ -186,7 +186,7 @@ func (udp_server_manager *Udp_server_manager) Init(chan_work *events.Chan_Work, 
 	udp_server_manager.udp_server_count_ = 1
 }
 
-func (udp_server_manager *Udp_server_manager) Listen(ip string, port string, packet_parse events.Io_buff_to_packet) uint16 {
+func (udp_server_manager *Udp_server_manager) Listen(ip string, port string, packet_parse common.Io_buff_to_packet) uint16 {
 	curr_udp_server_count := udp_server_manager.udp_server_count_
 	udp_server := new(Udp_server)
 	udp_server_manager.udp_listen_list_[curr_udp_server_count] = udp_server

@@ -20,7 +20,7 @@ type Udp_client struct {
 	chan_work_      *events.Chan_Work
 	recv_buff_size_ int
 	send_buff_size_ int
-	packet_parse_   events.Io_buff_to_packet
+	packet_parse_   common.Io_buff_to_packet
 	is_connect_     bool
 }
 
@@ -133,7 +133,7 @@ func (udp_client *Udp_client) Is_connect() bool {
 	return udp_client.is_connect_
 }
 
-func (udp_client *Udp_client) Connct(session_id int, server_ip string, server_port int, recv_buff_size int, send_buff_size int, packet_parse events.Io_buff_to_packet, chan_work *events.Chan_Work) bool {
+func (udp_client *Udp_client) Connct(session_id int, server_ip string, server_port int, recv_buff_size int, send_buff_size int, packet_parse common.Io_buff_to_packet, chan_work *events.Chan_Work) bool {
 	udp_client.session_id_ = session_id
 	udp_client.server_ip_ = server_ip
 	udp_client.server_port_ = strconv.Itoa(server_port)
@@ -176,7 +176,7 @@ func (client_udp_manager *Client_udp_manager) Init(chan_work *events.Chan_Work, 
 	client_udp_manager.client_tcp_list_ = make(map[int]*Udp_client)
 }
 
-func (client_udp_manager *Client_udp_manager) Connect_tcp(server_ip string, server_port int, packet_parse events.Io_buff_to_packet) int {
+func (client_udp_manager *Client_udp_manager) Connect_tcp(server_ip string, server_port int, packet_parse common.Io_buff_to_packet) int {
 	session_id := client_udp_manager.session_counter_interface_.Get_session_id()
 
 	udp_client := new(Udp_client)

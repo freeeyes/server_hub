@@ -25,15 +25,6 @@ type Io_session_info struct {
 	active_time_  int64
 }
 
-//服务器间链接接口
-type Client_io_manager interface {
-	Connect_tcp(server_ip string, server_port int, packet_parse Io_buff_to_packet) int
-	Time_Check()
-	Close_all()
-	Close(session_id int)
-	Reconnect(session_id int)
-}
-
 //服务器监听接口
 type Listen_io_manager interface {
 	Close()
@@ -44,8 +35,8 @@ type Io_manager struct {
 	Listen_tcp_manager_    Listen_io_manager
 	Listen_udp_manager_    Listen_io_manager
 	Listen_serial_manager_ Listen_io_manager
-	Client_tcp_manager_    Client_io_manager
-	Client_udp_manager_    Client_io_manager
+	Client_tcp_manager_    common.Client_io_manager
+	Client_udp_manager_    common.Client_io_manager
 }
 
 func (io_manager *Io_manager) Set_tcp_manager(listen_tcp_manager Listen_io_manager) {
@@ -60,11 +51,11 @@ func (io_manager *Io_manager) Set_serial_manager(listen_serial_manager Listen_io
 	io_manager.Listen_serial_manager_ = listen_serial_manager
 }
 
-func (io_manager *Io_manager) Set_client_tcp_manager(listen_client_tcp_manager Client_io_manager) {
+func (io_manager *Io_manager) Set_client_tcp_manager(listen_client_tcp_manager common.Client_io_manager) {
 	io_manager.Client_tcp_manager_ = listen_client_tcp_manager
 }
 
-func (io_manager *Io_manager) Set_client_udp_manager(listen_client_udp_manager Client_io_manager) {
+func (io_manager *Io_manager) Set_client_udp_manager(listen_client_udp_manager common.Client_io_manager) {
 	io_manager.Client_udp_manager_ = listen_client_udp_manager
 }
 
@@ -88,11 +79,19 @@ type Chan_Work struct {
 	io_time_check_         int
 	logic_command_list_    map[uint16]func(int, []byte, int, common.Session_Info)
 	logic_list_            []common.Server_logic_info
-	client_tcp_manager_    Client_io_manager
-	client_udp_manager_    Client_io_manager
+	client_tcp_manager_    common.Client_io_manager
+	client_udp_manager_    common.Client_io_manager
 	listen_tcp_manager_    Listen_io_manager
 	listen_udp_manager_    Listen_io_manager
 	listen_serial_manager_ Listen_io_manager
+}
+
+func (chan_work *Chan_Work) Get_tcp_clientmanager() common.Client_io_manager {
+	return chan_work.client_tcp_manager_
+}
+
+func (chan_work *Chan_Work) Get_udp_clientmanager() common.Client_io_manager {
+	return chan_work.client_udp_manager_
 }
 
 func (chan_work *Chan_Work) Add_listen_tcp_manager(listen_tcp_manager Listen_io_manager) {
@@ -108,12 +107,12 @@ func (chan_work *Chan_Work) Add_listen_serial_manager(listen_serial_manager List
 }
 
 //注册tcp服务器间对象
-func (chan_work *Chan_Work) Add_tcp_client_manager(client_tcp_manager Client_io_manager) {
+func (chan_work *Chan_Work) Add_tcp_client_manager(client_tcp_manager common.Client_io_manager) {
 	chan_work.client_tcp_manager_ = client_tcp_manager
 }
 
 //注册udp服务器间对象
-func (chan_work *Chan_Work) Add_udp_client_manager(client_udp_manager Client_io_manager) {
+func (chan_work *Chan_Work) Add_udp_client_manager(client_udp_manager common.Client_io_manager) {
 	chan_work.client_udp_manager_ = client_udp_manager
 }
 

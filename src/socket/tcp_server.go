@@ -20,11 +20,11 @@ type Tcp_server struct {
 	chan_work_                 *events.Chan_Work
 	recv_buff_size_            int
 	send_buff_size_            int
-	packet_parse_              events.Io_buff_to_packet
+	packet_parse_              common.Io_buff_to_packet
 	listen_close_chan_         chan int
 }
 
-func (tcp_server *Tcp_server) Handle_Connection(c net.Conn, packet_parse events.Io_buff_to_packet) {
+func (tcp_server *Tcp_server) Handle_Connection(c net.Conn, packet_parse common.Io_buff_to_packet) {
 	var session = new(Tcp_Session)
 	session_id := tcp_server.Session_counter_interface_.Get_session_id()
 	session.Init(session_id,
@@ -128,7 +128,7 @@ func (tcp_server *Tcp_server) Finial_Finish() {
 	fmt.Println("[Tcp_Serve::Finial_Finish]close ok")
 }
 
-func (tcp_server *Tcp_server) Listen(ip string, port string, chan_work *events.Chan_Work, session_counter_interface common.Session_counter_interface, recv_buff_size int, send_buff_size int, packet_parse events.Io_buff_to_packet) uint16 {
+func (tcp_server *Tcp_server) Listen(ip string, port string, chan_work *events.Chan_Work, session_counter_interface common.Session_counter_interface, recv_buff_size int, send_buff_size int, packet_parse common.Io_buff_to_packet) uint16 {
 	tcp_server.server_ip_ = ip
 	tcp_server.server_port_ = port
 	tcp_server.chan_work_ = chan_work
@@ -199,7 +199,7 @@ func (tcp_server_manager *Tcp_server_manager) Init(chan_work *events.Chan_Work, 
 	tcp_server_manager.tcp_server_count_ = 1
 }
 
-func (tcp_server_manager *Tcp_server_manager) Listen(ip string, port string, packet_parse events.Io_buff_to_packet) uint16 {
+func (tcp_server_manager *Tcp_server_manager) Listen(ip string, port string, packet_parse common.Io_buff_to_packet) uint16 {
 	curr_tcp_server_count := tcp_server_manager.tcp_server_count_
 	tcp_server := new(Tcp_server)
 	tcp_server_manager.tcp_listen_list_[curr_tcp_server_count] = tcp_server

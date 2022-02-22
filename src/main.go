@@ -137,7 +137,7 @@ func main() {
 	chan_work.Start(server_json_info.Recv_queue_count_, server_json_info.Io_time_check_)
 
 	//创建消息解析类
-	var packet_parse events.Io_buff_to_packet = new(server_logic.Io_buff_to_packet_logoc)
+	var packet_parse common.Io_buff_to_packet = new(server_logic.Io_buff_to_packet_logoc)
 
 	//启动tcp监听
 	for _, tcp_server_config := range server_json_info.Tcp_server_ {

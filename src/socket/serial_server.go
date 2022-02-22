@@ -15,7 +15,7 @@ type Serial_server struct {
 	chan_work_                 *events.Chan_Work
 	recv_buff_size_            int
 	send_buff_size_            int
-	packet_parse_              events.Io_buff_to_packet
+	packet_parse_              common.Io_buff_to_packet
 	Session_                   Serial_Session
 	listen_close_chan_         chan int
 }
@@ -49,7 +49,7 @@ func (serial_Server *Serial_server) Finial_Finish() {
 	fmt.Println("[Serial_server::Finial_Finish]close ok")
 }
 
-func (serial_Server *Serial_server) Listen(name string, frequency int, chan_work *events.Chan_Work, session_counter_interface common.Session_counter_interface, recv_buff_size int, send_buff_size int, packet_parse events.Io_buff_to_packet) uint16 {
+func (serial_Server *Serial_server) Listen(name string, frequency int, chan_work *events.Chan_Work, session_counter_interface common.Session_counter_interface, recv_buff_size int, send_buff_size int, packet_parse common.Io_buff_to_packet) uint16 {
 	serial_Server.serial_name_ = name
 	serial_Server.serial_frequency_ = frequency
 	serial_Server.chan_work_ = chan_work
@@ -141,7 +141,7 @@ func (serial_server_manager *Serial_server_manager) Init(chan_work *events.Chan_
 	serial_server_manager.serial_server_count_ = 1
 }
 
-func (serial_server_manager *Serial_server_manager) Listen(name string, frequency int, packet_parse events.Io_buff_to_packet) uint16 {
+func (serial_server_manager *Serial_server_manager) Listen(name string, frequency int, packet_parse common.Io_buff_to_packet) uint16 {
 	curr_serial_server_count := serial_server_manager.serial_server_count_
 	serial_server := new(Serial_server)
 	serial_server_manager.serial_listen_list_[curr_serial_server_count] = serial_server
